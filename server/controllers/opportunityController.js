@@ -12,7 +12,13 @@ exports.getOpportunities = asyncHandler(async (req, res, next) => {
     // Optional filtering (type, stipend, skills)
     const reqQuery = { ...req.query };
     const removeFields = ['select', 'sort', 'page', 'limit'];
-    removeFields.forEach(param => delete reqQuery[param]);
+    
+    // Remove fields with empty values or default ignored fields
+    Object.keys(reqQuery).forEach(key => {
+        if (removeFields.includes(key) || reqQuery[key] === '') {
+            delete reqQuery[key];
+        }
+    });
 
     let queryStr = JSON.stringify(reqQuery);
     queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
