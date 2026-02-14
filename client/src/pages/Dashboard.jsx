@@ -4,11 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Typography, Button, Grid, Card, CardContent, Chip } from '@mui/material';
 import { motion } from 'framer-motion';
 import io from 'socket.io-client';
+import api from '../services/api';
 
 const Dashboard = () => {
     const { user } = useSelector((state) => state.auth);
     const navigate = useNavigate();
     const [notifications, setNotifications] = useState([]);
+    const [analytics, setAnalytics] = useState(null);
 
     useEffect(() => {
         const socket = io('http://localhost:5000');
@@ -26,11 +28,25 @@ const Dashboard = () => {
         };
     }, [user.role]);
 
+    useEffect(() => {
+        if (user?.role === 'admin' || user?.role === 'authority') {
+            const fetchAnalytics = async () => {
+                try {
+                    const res = await api.get('/analytics');
+                    setAnalytics(res.data.data);
+                } catch (err) {
+                    console.error("Error fetching analytics", err);
+                }
+            };
+            fetchAnalytics();
+        }
+    }, [user]);
+
     return (
         <Box sx={{ p: 4, minHeight: '100vh', bgcolor: 'background.default', color: 'text.primary' }}>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 <Typography variant="h3" gutterBottom sx={{ fontWeight: 'bold', background: 'linear-gradient(to right, #3b82f6, #14b8a6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                    {user?.role.charAt(0).toUpperCase() + user?.role.slice(1)} Dashboard
+                    Welcome, {user?.username}
                 </Typography>
 
                 <Grid container spacing={3}>
@@ -96,6 +112,22 @@ const Dashboard = () => {
                                 </Card>
                             </Grid>
 
+                            {user?.role === 'admin' && (
+                                <Grid item xs={12} md={6}>
+                                    <Card sx={{ bgcolor: 'background.paper', border: '1px solid rgba(255,255,255,0.1)' }}>
+                                        <CardContent>
+                                            <Typography variant="h5" color="error.main" gutterBottom>System Configuration</Typography>
+                                            <Typography variant="body2" color="text.secondary" paragraph>
+                                                Manage allowed email domains and security settings.
+                                            </Typography>
+                                            <Button variant="contained" color="error" onClick={() => navigate('/admin/domains')}>
+                                                Manage Domains
+                                            </Button>
+                                        </CardContent>
+                                    </Card>
+                                </Grid>
+                            )}
+
                             {/* ANALYTICS SECTION */}
                             <Grid item xs={12}>
                                 <Card sx={{ bgcolor: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
@@ -106,20 +138,36 @@ const Dashboard = () => {
                                         <Grid container spacing={2}>
                                             <Grid item xs={6} md={3}>
                                                 <Typography variant="subtitle2" color="text.secondary">Total Users</Typography>
-                                                <Typography variant="h4" fontWeight="bold">1,245</Typography>
+                                                <Typography variant="h4" fontWeight="bold">{analytics?.counts?.users || 0}</Typography>
                                             </Grid>
                                             <Grid item xs={6} md={3}>
                                                 <Typography variant="subtitle2" color="text.secondary">Active Grievances</Typography>
-                                                <Typography variant="h4" fontWeight="bold" color="warning.main">24</Typography>
+                                                <Typography variant="h4" fontWeight="bold" color="warning.main">{analytics?.counts?.active_grievances || 0}</Typography>
                                             </Grid>
                                             <Grid item xs={6} md={3}>
                                                 <Typography variant="subtitle2" color="text.secondary">Open Internships</Typography>
-                                                <Typography variant="h4" fontWeight="bold" color="success.main">8</Typography>
+                                                <Typography variant="h4" fontWeight="bold" color="success.main">{analytics?.counts?.internships || 0}</Typography>
                                             </Grid>
                                             <Grid item xs={6} md={3}>
-                                                <Typography variant="subtitle2" color="text.secondary">Avg. Resolution Time</Typography>
-                                                <Typography variant="h4" fontWeight="bold" color="info.main">2.5 Days</Typography>
+                                                <Typography variant="subtitle2" color="text.secondary">Total Tickets</Typography>
+                                                <Typography variant="h4" fontWeight="bold" color="info.main">{analytics?.counts?.grievances || 0}</Typography>
                                             </Grid>
+                                        </Grid>
+
+                                        {/* Department Breakdown */}
+                                        <Typography variant="h6" color="primary" sx={{ mt: 3, mb: 1 }}>Department Statistics</Typography>
+                                        <Grid container spacing={2}>
+                                            {analytics?.department_users?.map((dept) => (
+                                                <Grid item xs={12} sm={6} md={4} key={dept._id}>
+                                                    <Box sx={{ p: 2, border: '1px solid rgba(255,255,255,0.1)', borderRadius: 2 }}>
+                                                        <Typography variant="subtitle1" fontWeight="bold" color="secondary">{dept._id}</Typography>
+                                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
+                                                            <Typography variant="body2" color="text.secondary">Students: {dept.students}</Typography>
+                                                            <Typography variant="body2" color="text.secondary">Faculty: {dept.faculty}</Typography>
+                                                        </Box>
+                                                    </Box>
+                                                </Grid>
+                                            ))}
                                         </Grid>
                                     </CardContent>
                                 </Card>

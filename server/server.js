@@ -33,6 +33,15 @@ if (process.env.NODE_ENV === 'development') {
 // CORS
 app.use(cors());
 
+// Helmet for security headers
+const helmet = require('helmet');
+app.use(helmet());
+
+// Health Check
+app.get('/api/health', (req, res) => {
+    res.status(200).json({ success: true, message: 'Server is healthy' });
+});
+
 // Socket.io Middleware
 app.use((req, res, next) => {
     req.io = io;
@@ -45,12 +54,16 @@ const grievance = require('./routes/grievance');
 const internships = require('./routes/internships');
 const applications = require('./routes/applications');
 const courses = require('./routes/courses');
+const analytics = require('./routes/analytics');
+const admin = require('./routes/admin');
 
 app.use('/api/v1/auth', auth);
 app.use('/api/v1/grievances', grievance);
 app.use('/api/v1/internships', internships);
 app.use('/api/v1/applications', applications);
 app.use('/api/v1/courses', courses);
+app.use('/api/v1/analytics', analytics);
+app.use('/api/v1/admin', admin);
 
 // Socket.io connection
 io.on('connection', (socket) => {

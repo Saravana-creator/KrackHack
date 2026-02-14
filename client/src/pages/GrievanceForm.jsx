@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Box, TextField, Button, Typography, MenuItem, Paper } from '@mui/material';
-import axios from 'axios';
+import api from '../services/api';
 import { motion } from 'framer-motion';
 
 const GrievanceForm = () => {
@@ -14,7 +14,7 @@ const GrievanceForm = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('/api/v1/grievances', { title, description, category });
+            await api.post('/grievances', { title, description, category });
             navigate('/dashboard');
         } catch (error) {
             console.error(error);

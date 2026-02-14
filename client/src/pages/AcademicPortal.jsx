@@ -8,7 +8,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import PeopleIcon from '@mui/icons-material/People';
 import ForumIcon from '@mui/icons-material/Forum';
-import axios from 'axios';
+import api from '../services/api';
 import { toast } from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import CourseCard from '../components/CourseCard';
@@ -38,7 +38,7 @@ const AcademicPortal = () => {
 
     const fetchCourses = async () => {
         try {
-            const res = await axios.get('/api/v1/courses');
+            const res = await api.get('/courses');
             setCourses(res.data.data);
             setLoading(false);
         } catch (err) {
@@ -49,7 +49,7 @@ const AcademicPortal = () => {
 
     const handleCreateCourse = async () => {
         try {
-            await axios.post('/api/v1/courses', newCourse);
+            await api.post('/courses', newCourse);
             toast.success('Course created successfully');
             setOpenAddCourse(false);
             fetchCourses();
@@ -62,7 +62,7 @@ const AcademicPortal = () => {
     const handleDeleteCourse = async (id) => {
         if (!window.confirm("Delete this course?")) return;
         try {
-            await axios.delete(`/api/v1/courses/${id}`);
+            await api.delete(`/courses/${id}`);
             toast.success('Course deleted');
             fetchCourses();
         } catch (err) {
@@ -80,7 +80,7 @@ const AcademicPortal = () => {
     const fetchResources = async (courseId) => {
         setLoadingResources(true);
         try {
-            const res = await axios.get(`/api/v1/courses/${courseId}/resources`);
+            const res = await api.get(`/courses/${courseId}/resources`);
             setResources(res.data.data);
             setLoadingResources(false);
         } catch (err) {
@@ -94,7 +94,7 @@ const AcademicPortal = () => {
             return toast.error('Please provide a title and URL');
         }
         try {
-            await axios.post(`/api/v1/courses/${selectedCourse._id}/resources`, newResource);
+            await api.post(`/courses/${selectedCourse._id}/resources`, newResource);
             toast.success('Material posted');
             fetchResources(selectedCourse._id);
             setNewResource({ title: '', description: '', fileUrl: '' });

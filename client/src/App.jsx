@@ -6,6 +6,7 @@ import { AnimatePresence } from 'framer-motion';
 import Navbar from './components/Navbar';
 import Cursor from './components/Cursor';
 import PrivateRoute from './components/PrivateRoute';
+import MainLayout from './layouts/MainLayout';
 
 import Landing from './pages/Landing';
 import Login from './pages/Login';
@@ -15,6 +16,8 @@ import GrievanceForm from './pages/GrievanceForm';
 import GrievanceList from './pages/GrievanceList';
 import InternshipPortal from './pages/InternshipPortal';
 import AcademicPortal from './pages/AcademicPortal';
+import Profile from './pages/Profile';
+import AdminDomains from './pages/AdminDomains';
 
 const theme = createTheme({
     palette: {
@@ -75,20 +78,25 @@ function App() {
             <CssBaseline />
             <Cursor />
             <Toaster position="top-right" />
-            <Navbar />
+            <Toaster position="top-right" />
+
             <AnimatePresence mode="wait">
                 <Routes>
-                    <Route path="/" element={<Landing />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
+                    <Route path="/" element={<><Navbar /><Landing /></>} />
+                    <Route path="/login" element={<><Navbar /><Login /></>} />
+                    <Route path="/register" element={<><Navbar /><Register /></>} />
 
-                    {/* Protected Routes */}
+                    {/* Protected Routes wrapped in MainLayout */}
                     <Route element={<PrivateRoute />}>
-                        <Route path="/dashboard" element={<Dashboard />} />
-                        <Route path="/grievance/new" element={<GrievanceForm />} />
-                        <Route path="/grievances" element={<GrievanceList />} />
-                        <Route path="/internships" element={<InternshipPortal />} />
-                        <Route path="/academics" element={<AcademicPortal />} />
+                        <Route element={<MainLayout />}>
+                            <Route path="/dashboard" element={<Dashboard />} />
+                            <Route path="/grievance/new" element={<GrievanceForm />} />
+                            <Route path="/grievances" element={<GrievanceList />} />
+                            <Route path="/internships" element={<InternshipPortal />} />
+                            <Route path="/academics" element={<AcademicPortal />} />
+                            <Route path="/profile" element={<Profile />} />
+                            <Route path="/admin/domains" element={<AdminDomains />} />
+                        </Route>
                     </Route>
                 </Routes>
             </AnimatePresence>

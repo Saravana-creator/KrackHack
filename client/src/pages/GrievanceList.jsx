@@ -7,7 +7,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import AddIcon from '@mui/icons-material/Add';
 import { motion } from 'framer-motion';
-import axios from 'axios';
+import api from '../services/api';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -26,7 +26,7 @@ const GrievanceList = () => {
 
     const fetchGrievances = async () => {
         try {
-            const res = await axios.get('/api/v1/grievances');
+            const res = await api.get('/grievances');
             setGrievances(res.data.data);
             setLoading(false);
         } catch (err) {
@@ -43,7 +43,7 @@ const GrievanceList = () => {
 
     const handleUpdateStatus = async () => {
         try {
-            await axios.put(`/api/v1/grievances/${selectedGrievance._id}`, { status: statusUpdate });
+            await api.put(`/grievances/${selectedGrievance._id}`, { status: statusUpdate });
             toast.success(`Ticket status updated to ${statusUpdate}`);
             setOpenDialog(false);
             fetchGrievances();
@@ -55,7 +55,7 @@ const GrievanceList = () => {
     const handleDelete = async (id) => {
         if (!window.confirm("Are you sure you want to delete this ticket?")) return;
         try {
-            await axios.delete(`/api/v1/grievances/${id}`);
+            await api.delete(`/grievances/${id}`);
             toast.success('Ticket deleted');
             fetchGrievances();
         } catch (err) {

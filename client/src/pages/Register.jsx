@@ -7,7 +7,7 @@ import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 
 const Register = () => {
-    const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'student' });
+    const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'student', secretKey: '' });
     const [showPassword, setShowPassword] = useState(false);
     const { isLoading, error } = useSelector((state) => state.auth);
     const dispatch = useDispatch();
@@ -65,6 +65,8 @@ const Register = () => {
                         required
                         InputProps={{ style: { color: 'white' } }}
                         InputLabelProps={{ style: { color: '#94a3b8' } }}
+                        helperText="Use your institute email (e.g., .edu, .ac.in)"
+                        FormHelperTextProps={{ style: { color: '#64748b' } }}
                     />
                     <TextField
                         fullWidth
@@ -91,6 +93,8 @@ const Register = () => {
                             )
                         }}
                         InputLabelProps={{ style: { color: '#94a3b8' } }}
+                        helperText="Min 8 chars, 1 Uppercase, 1 Lowercase, 1 Number, 1 Special"
+                        FormHelperTextProps={{ style: { color: '#64748b' } }}
                     />
                     <TextField
                         select
@@ -106,7 +110,26 @@ const Register = () => {
                         <MenuItem value="student">Student</MenuItem>
                         <MenuItem value="faculty">Faculty</MenuItem>
                         <MenuItem value="authority">Authority</MenuItem>
+                        <MenuItem value="admin">Admin</MenuItem>
                     </TextField>
+
+                    {/* Show Secret Key if Admin/Authority/Faculty is selected OR if email indicates an admin */}
+                    {(formData.role === 'admin' || formData.role === 'authority' || formData.role === 'faculty' || formData.email.endsWith('@admin.com')) && (
+                        <TextField
+                            fullWidth
+                            label="Secret Key"
+                            type="password"
+                            margin="normal"
+                            variant="outlined"
+                            value={formData.secretKey}
+                            onChange={(e) => setFormData({ ...formData, secretKey: e.target.value })}
+                            required
+                            InputProps={{ style: { color: 'white' } }}
+                            InputLabelProps={{ style: { color: '#94a3b8' } }}
+                            helperText="Required for Admin/Authority roles"
+                            FormHelperTextProps={{ style: { color: '#f59e0b' } }}
+                        />
+                    )}
 
                     <Button
                         fullWidth

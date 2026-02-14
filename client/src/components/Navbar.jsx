@@ -16,7 +16,7 @@ const Navbar = () => {
     };
 
     return (
-        <AppBar position="sticky" sx={{ bgcolor: 'var(--tw-colors-background-paper)', backdropFilter: 'blur(10px)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+        <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1, bgcolor: 'background.paper', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
             <Toolbar>
                 <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 'bold', letterSpacing: 1, background: 'linear-gradient(to right, #3b82f6, #14b8a6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                     <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>AEGIS PROTOCOL</Link>
@@ -27,9 +27,9 @@ const Navbar = () => {
                         <Button component={Link} to="/dashboard" color="inherit">Dashboard</Button>
                         <Button component={Link} to="/internships" color="inherit">Careers</Button>
                         <Button component={Link} to="/academics" color="inherit">Academics</Button>
-                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                            Welcome, {user?.role.toUpperCase()}
-                        </Typography>
+                        <Button component={Link} to="/profile" sx={{ color: 'secondary.main', fontWeight: 'bold' }}>
+                            {user?.username?.toUpperCase()}
+                        </Button>
                         <IconButton color="inherit">
                             <Badge badgeContent={4} color="error">
                                 <NotificationsIcon />

@@ -8,7 +8,7 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
-import axios from 'axios';
+import api from '../services/api';
 import { toast } from 'react-hot-toast';
 import { motion } from 'framer-motion';
 
@@ -35,7 +35,7 @@ const InternshipPortal = () => {
 
     const fetchInternships = async () => {
         try {
-            const res = await axios.get('/api/v1/internships');
+            const res = await api.get('/internships');
             setInternships(res.data.data);
             if (res.data.data.length > 0) setSelectedInternship(res.data.data[0]);
             setLoading(false);
@@ -47,7 +47,7 @@ const InternshipPortal = () => {
 
     const fetchMyApplications = async () => {
         try {
-            const res = await axios.get('/api/v1/applications/my');
+            const res = await api.get('/applications/my');
             setApplications(res.data.data);
         } catch (err) {
             console.error(err);
@@ -57,7 +57,7 @@ const InternshipPortal = () => {
     const handleApply = async () => {
         if (!resumeLink) return toast.error('Please provide a resume link');
         try {
-            await axios.post(`/api/v1/internships/${selectedInternship._id}/apply`, { resumeLink });
+            await api.post(`/internships/${selectedInternship._id}/apply`, { resumeLink });
             toast.success('Application submitted successfully!');
             setApplyDialogOpen(false);
             setResumeLink('');
@@ -69,7 +69,7 @@ const InternshipPortal = () => {
 
     const handlePostInternship = async () => {
         try {
-            await axios.post('/api/v1/internships', newInternship);
+            await api.post('/internships', newInternship);
             toast.success('Internship posted successfully!');
             setOpenPostDialog(false);
             fetchInternships();
@@ -82,7 +82,7 @@ const InternshipPortal = () => {
     const handleDelete = async (id) => {
         if (!window.confirm("Delete this opportunity?")) return;
         try {
-            await axios.delete(`/api/v1/internships/${id}`);
+            await api.delete(`/internships/${id}`);
             toast.success('Deleted successfully');
             fetchInternships();
             setSelectedInternship(null);
@@ -93,7 +93,7 @@ const InternshipPortal = () => {
 
     const handleViewApplications = async (id) => {
         try {
-            const res = await axios.get(`/api/v1/internships/${id}/applications`);
+            const res = await api.get(`/internships/${id}/applications`);
             setSelectedInternshipApps(res.data.data);
             setOpenAppsDialog(true);
         } catch (err) {
@@ -103,7 +103,7 @@ const InternshipPortal = () => {
 
     const handleUpdateStatus = async (appId, status) => {
         try {
-            await axios.put(`/api/v1/applications/${appId}`, { status });
+            await api.put(`/applications/${appId}`, { status });
             toast.success(`Application ${status}`);
             const updatedApps = selectedInternshipApps.map(app =>
                 app._id === appId ? { ...app, status } : app

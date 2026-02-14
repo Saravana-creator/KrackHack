@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import api from '../services/api';
 import jwt_decode from 'jwt-decode';
 
 const initialState = {
@@ -12,9 +12,8 @@ const initialState = {
 // Async Thunks
 export const login = createAsyncThunk('auth/login', async (userData, thunkAPI) => {
     try {
-        const response = await axios.post('/api/v1/auth/login', userData);
+        const response = await api.post('/auth/login', userData);
         localStorage.setItem('token', response.data.token);
-        axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
         return response.data;
     } catch (error) {
         return thunkAPI.rejectWithValue(error.response.data.error || 'Login failed');
@@ -23,9 +22,8 @@ export const login = createAsyncThunk('auth/login', async (userData, thunkAPI) =
 
 export const register = createAsyncThunk('auth/register', async (userData, thunkAPI) => {
     try {
-        const response = await axios.post('/api/v1/auth/register', userData);
+        const response = await api.post('/auth/register', userData);
         localStorage.setItem('token', response.data.token);
-        axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
         return response.data;
     } catch (error) {
         return thunkAPI.rejectWithValue(error.response.data.error || 'Registration failed');
@@ -33,20 +31,16 @@ export const register = createAsyncThunk('auth/register', async (userData, thunk
 });
 
 export const loadUser = createAsyncThunk('auth/loadUser', async (_, thunkAPI) => {
-    if (localStorage.token) {
-        axios.defaults.headers.common['Authorization'] = `Bearer ${localStorage.token}`;
-    } else {
-        delete axios.defaults.headers.common['Authorization'];
+    if (!localStorage.getItem('token')) {
         return thunkAPI.rejectWithValue('No token found');
     }
 
     try {
-        const res = await axios.get('/api/v1/auth/me');
+        const res = await api.get('/auth/me');
         return res.data.data;
     } catch (err) {
-        delete axios.defaults.headers.common['Authorization'];
         localStorage.removeItem('token');
-        return thunkAPI.rejectWithValue(err.response.data.error);
+        return thunkAPI.rejectWithValue(err.response?.data?.error || 'Authentication failed');
     }
 });
 

@@ -28,6 +28,12 @@ const userSchema = new mongoose.Schema({
         enum: ['student', 'faculty', 'authority', 'admin'],
         default: 'student'
     },
+    department: {
+        type: String,
+        required: [true, 'Please add a department'],
+        enum: ['CSE', 'ECE', 'MECH', 'CIVIL', 'IT', 'None'],
+        default: 'CSE'
+    },
     resetPasswordToken: String,
     resetPasswordExpire: Date,
     createdAt: {
