@@ -25,7 +25,7 @@ const Navbar = () => {
                 {isAuthenticated ? (
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <Button component={Link} to="/dashboard" color="inherit">Dashboard</Button>
-                        <Button component={Link} to="/internships" color="inherit">Careers</Button>
+                        <Button component={Link} to="/careers" color="inherit">Careers</Button>
                         <Button component={Link} to="/academics" color="inherit">Academics</Button>
                         <Button component={Link} to="/profile" sx={{ color: 'secondary.main', fontWeight: 'bold' }}>
                             {user?.username?.toUpperCase()}

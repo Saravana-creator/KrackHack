@@ -14,7 +14,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import GrievanceForm from './pages/GrievanceForm';
 import GrievanceList from './pages/GrievanceList';
-import InternshipPortal from './pages/InternshipPortal';
+
 import AcademicPortal from './pages/AcademicPortal';
 import Profile from './pages/Profile';
 import AdminDomains from './pages/AdminDomains';
@@ -94,11 +94,10 @@ function App() {
                             <Route path="/dashboard" element={<Dashboard />} />
                             <Route path="/grievance/new" element={<GrievanceForm />} />
                             <Route path="/grievances" element={<GrievanceList />} />
-                            <Route path="/internships" element={<InternshipPortal />} />
                             <Route path="/academics" element={<AcademicPortal />} />
                             <Route path="/profile" element={<Profile />} />
                             <Route path="/admin/domains" element={<AdminDomains />} />
-                            <Route path="/opportunities" element={<Opportunities />} />
+                            <Route path="/careers" element={<Opportunities />} />
                             <Route path="/lost-found" element={<LostFound />} />
                         </Route>
                     </Route>

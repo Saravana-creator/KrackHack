@@ -82,19 +82,7 @@ const Dashboard = () => {
                         </Card>
                     </Grid>
 
-                    <Grid item xs={12} md={6}>
-                        <Card sx={{ bgcolor: 'background.paper', border: '1px solid rgba(255,255,255,0.1)' }}>
-                            <CardContent>
-                                <Typography variant="h5" color="success.main" gutterBottom>Career & Research</Typography>
-                                <Typography variant="body2" color="text.secondary" paragraph>
-                                    Explore internships, research opportunities, and apply.
-                                </Typography>
-                                <Button variant="contained" color="success" onClick={() => navigate('/internships')}>
-                                    Explore Opportunities
-                                </Button>
-                            </CardContent>
-                        </Card>
-                    </Grid>
+
 
                     {/* NEW MODULES */}
                     <Grid item xs={12} md={6}>
@@ -104,7 +92,7 @@ const Dashboard = () => {
                                 <Typography variant="body2" color="text.secondary" paragraph>
                                     New! Internships, Research, and Jobs in one place.
                                 </Typography>
-                                <Button variant="contained" sx={{ bgcolor: '#ec4899', '&:hover': { bgcolor: '#db2777' } }} onClick={() => navigate('/opportunities')}>
+                                <Button variant="contained" sx={{ bgcolor: '#ec4899', '&:hover': { bgcolor: '#db2777' } }} onClick={() => navigate('/careers')}>
                                     Browse Hub
                                 </Button>
                             </CardContent>

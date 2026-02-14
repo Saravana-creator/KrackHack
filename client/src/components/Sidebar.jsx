@@ -20,7 +20,7 @@ const Sidebar = () => {
     const menuItems = [
         { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
         { text: 'Academics', icon: <SchoolIcon />, path: '/academics' },
-        { text: 'Careers', icon: <WorkIcon />, path: '/internships' },
+        { text: 'Careers', icon: <WorkIcon />, path: '/careers' },
     ];
 
     return (
