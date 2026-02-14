@@ -56,6 +56,8 @@ const applications = require('./routes/applications');
 const courses = require('./routes/courses');
 const analytics = require('./routes/analytics');
 const admin = require('./routes/admin');
+const opportunities = require('./routes/opportunities');
+const lostfound = require('./routes/lostFound');
 
 app.use('/api/v1/auth', auth);
 app.use('/api/v1/grievances', grievance);
@@ -64,6 +66,8 @@ app.use('/api/v1/applications', applications);
 app.use('/api/v1/courses', courses);
 app.use('/api/v1/analytics', analytics);
 app.use('/api/v1/admin', admin);
+app.use('/api/v1/opportunities', opportunities);
+app.use('/api/v1/lostfound', lostfound);
 
 // Socket.io connection
 io.on('connection', (socket) => {

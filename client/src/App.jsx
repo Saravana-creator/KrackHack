@@ -18,6 +18,8 @@ import InternshipPortal from './pages/InternshipPortal';
 import AcademicPortal from './pages/AcademicPortal';
 import Profile from './pages/Profile';
 import AdminDomains from './pages/AdminDomains';
+import Opportunities from './pages/Opportunities';
+import LostFound from './pages/LostFound';
 
 const theme = createTheme({
     palette: {
@@ -96,6 +98,8 @@ function App() {
                             <Route path="/academics" element={<AcademicPortal />} />
                             <Route path="/profile" element={<Profile />} />
                             <Route path="/admin/domains" element={<AdminDomains />} />
+                            <Route path="/opportunities" element={<Opportunities />} />
+                            <Route path="/lost-found" element={<LostFound />} />
                         </Route>
                     </Route>
                 </Routes>

@@ -96,6 +96,35 @@ const Dashboard = () => {
                         </Card>
                     </Grid>
 
+                    {/* NEW MODULES */}
+                    <Grid item xs={12} md={6}>
+                        <Card sx={{ bgcolor: 'background.paper', border: '1px solid rgba(255,255,255,0.1)' }}>
+                            <CardContent>
+                                <Typography variant="h5" sx={{ color: '#ec4899' }} gutterBottom>Opportunities Hub</Typography>
+                                <Typography variant="body2" color="text.secondary" paragraph>
+                                    New! Internships, Research, and Jobs in one place.
+                                </Typography>
+                                <Button variant="contained" sx={{ bgcolor: '#ec4899', '&:hover': { bgcolor: '#db2777' } }} onClick={() => navigate('/opportunities')}>
+                                    Browse Hub
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+
+                    <Grid item xs={12} md={6}>
+                        <Card sx={{ bgcolor: 'background.paper', border: '1px solid rgba(255,255,255,0.1)' }}>
+                            <CardContent>
+                                <Typography variant="h5" sx={{ color: '#f59e0b' }} gutterBottom>Lost & Found</Typography>
+                                <Typography variant="body2" color="text.secondary" paragraph>
+                                    Report lost items or claim found items on campus.
+                                </Typography>
+                                <Button variant="contained" color="warning" onClick={() => navigate('/lost-found')}>
+                                    View Items
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+
                     {(user?.role === 'admin' || user?.role === 'authority') && (
                         <>
                             <Grid item xs={12} md={6}>

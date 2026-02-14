@@ -1,30 +1,27 @@
 const mongoose = require('mongoose');
 
 const ApplicationSchema = new mongoose.Schema({
+    opportunity: {
+        type: mongoose.Schema.ObjectId,
+        ref: 'Opportunity'
+    },
     internship: {
         type: mongoose.Schema.ObjectId,
-        ref: 'Internship',
-        required: true
+        ref: 'Internship'
     },
     student: {
         type: mongoose.Schema.ObjectId,
         ref: 'User',
         required: true
     },
-    resumeLink: {
+    resumeURL: {
         type: String,
-        // In a real app, this would be a file upload URL. 
-        // For now, we'll treat it as a string (e.g., Google Drive link) or remove strict requirement for demo.
-        required: [true, 'Please provide a resume link']
-    },
-    coverLetter: {
-        type: String,
-        maxlength: 500
+        required: [true, 'Please provide a resume URL']
     },
     status: {
         type: String,
-        enum: ['pending', 'reviewed', 'accepted', 'rejected'],
-        default: 'pending'
+        enum: ['Applied', 'Shortlisted', 'Rejected', 'Accepted'],
+        default: 'Applied'
     },
     appliedAt: {
         type: Date,
@@ -32,7 +29,8 @@ const ApplicationSchema = new mongoose.Schema({
     }
 });
 
-// Prevent duplicate applications for the same internship by the same student
-ApplicationSchema.index({ internship: 1, student: 1 }, { unique: true });
+// Prevent multiple applications for the same opportunity/internship by the same student
+ApplicationSchema.index({ opportunity: 1, student: 1 }, { unique: true, sparse: true });
+ApplicationSchema.index({ internship: 1, student: 1 }, { unique: true, sparse: true });
 
 module.exports = mongoose.model('Application', ApplicationSchema);
