@@ -13,10 +13,10 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 // Load models
-const Opportunity = require('./models/Opportunity');
-const LostFoundItem = require('./models/LostFoundItem');
-const Grievance = require('./models/Grievance');
-const User = require('./models/User');
+const Opportunity = require('../models/Opportunity');
+const LostFoundItem = require('../models/LostFoundItem');
+const Grievance = require('../models/Grievance');
+const User = require('../models/User');
 
 // Connect to DB
 const connectDB = async () => {
