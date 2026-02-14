@@ -20,12 +20,12 @@ const { protect, authorize } = require('../middleware/auth');
 router
     .route('/')
     .get(getCourses)
-    .post(protect, authorize('faculty', 'admin'), createCourse);
+    .post(protect, authorize('faculty', 'admin', 'authority'), createCourse);
 
 router
     .route('/:id')
     .get(getCourse)
-    .put(protect, authorize('faculty', 'admin'), updateCourse)
-    .delete(protect, authorize('faculty', 'admin'), deleteCourse);
+    .put(protect, authorize('faculty', 'admin', 'authority'), updateCourse)
+    .delete(protect, authorize('faculty', 'admin', 'authority'), deleteCourse);
 
 module.exports = router;

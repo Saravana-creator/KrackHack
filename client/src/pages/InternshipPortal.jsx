@@ -1,25 +1,32 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Box, Typography, Button, Grid, CircularProgress, IconButton, Tabs, Tab, TextField, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { Box, Typography, Button, Grid, CircularProgress, Tabs, Tab, TextField, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, Paper, Avatar, Divider, Chip } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import WorkIcon from '@mui/icons-material/Work';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { motion } from 'framer-motion';
-import InternshipCard from '../components/InternshipCard';
 
 const InternshipPortal = () => {
     const { user } = useSelector((state) => state.auth);
     const [internships, setInternships] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState(0); // 0: Listings, 1: My Applications (Student) / New Post (Faculty)
-    const [applications, setApplications] = useState([]); // For students to see their status
+    const [activeTab, setActiveTab] = useState(0);
+    const [selectedInternship, setSelectedInternship] = useState(null);
+    const [applications, setApplications] = useState([]);
     const [newInternship, setNewInternship] = useState({ title: '', company: '', description: '', type: 'internship', location: '', stipend: 'Unpaid', duration: '', deadline: '' });
     const [openPostDialog, setOpenPostDialog] = useState(false);
+    const [applyDialogOpen, setApplyDialogOpen] = useState(false);
+    const [resumeLink, setResumeLink] = useState('');
+
+    // Faculty specific
     const [openAppsDialog, setOpenAppsDialog] = useState(false);
     const [selectedInternshipApps, setSelectedInternshipApps] = useState([]);
-    const [selectedInternshipTitle, setSelectedInternshipTitle] = useState('');
 
     useEffect(() => {
         fetchInternships();
@@ -30,6 +37,7 @@ const InternshipPortal = () => {
         try {
             const res = await axios.get('/api/v1/internships');
             setInternships(res.data.data);
+            if (res.data.data.length > 0) setSelectedInternship(res.data.data[0]);
             setLoading(false);
         } catch (err) {
             toast.error('Failed to load internships');
@@ -46,10 +54,13 @@ const InternshipPortal = () => {
         }
     };
 
-    const handleApply = async (id, resumeLink) => {
+    const handleApply = async () => {
+        if (!resumeLink) return toast.error('Please provide a resume link');
         try {
-            await axios.post(`/api/v1/internships/${id}/apply`, { resumeLink });
+            await axios.post(`/api/v1/internships/${selectedInternship._id}/apply`, { resumeLink });
             toast.success('Application submitted successfully!');
+            setApplyDialogOpen(false);
+            setResumeLink('');
             fetchMyApplications();
         } catch (err) {
             toast.error(err.response?.data?.error || 'Failed to apply');
@@ -69,11 +80,12 @@ const InternshipPortal = () => {
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm("Are you sure you want to delete this opportunity?")) return;
+        if (!window.confirm("Delete this opportunity?")) return;
         try {
             await axios.delete(`/api/v1/internships/${id}`);
             toast.success('Deleted successfully');
             fetchInternships();
+            setSelectedInternship(null);
         } catch (err) {
             toast.error(err.response?.data?.error || 'Failed to delete');
         }
@@ -83,8 +95,6 @@ const InternshipPortal = () => {
         try {
             const res = await axios.get(`/api/v1/internships/${id}/applications`);
             setSelectedInternshipApps(res.data.data);
-            const internship = internships.find(i => i._id === id);
-            setSelectedInternshipTitle(internship ? internship.title : 'Applications');
             setOpenAppsDialog(true);
         } catch (err) {
             toast.error('Failed to load applications');
@@ -95,7 +105,6 @@ const InternshipPortal = () => {
         try {
             await axios.put(`/api/v1/applications/${appId}`, { status });
             toast.success(`Application ${status}`);
-            // Refresh the list
             const updatedApps = selectedInternshipApps.map(app =>
                 app._id === appId ? { ...app, status } : app
             );
@@ -108,151 +117,185 @@ const InternshipPortal = () => {
     if (loading) return <Box display="flex" justifyContent="center" mt={4}><CircularProgress /></Box>;
 
     return (
-        <Box sx={{ p: 4, minHeight: '100vh', bgcolor: 'background.default' }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
-                <Typography variant="h4" fontWeight="bold" sx={{ background: '-webkit-linear-gradient(45deg, #3b82f6, #14b8a6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                    Career & Research Portal
+        <Box sx={{ p: 3, minHeight: '100vh', bgcolor: '#f3f4f6' }}> {/* LinkedIn Light Gray BG */}
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} sx={{ bgcolor: 'white', p: 2, borderRadius: 2, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                <Typography variant="h5" fontWeight="bold" color="primary">
+                    Jobs & Research
                 </Typography>
-                {(user.role === 'admin' || user.role === 'faculty') && (
+                {(user.role === 'admin' || user.role === 'faculty' || user.role === 'authority') && (
                     <Button
                         variant="contained"
                         startIcon={<AddIcon />}
                         onClick={() => setOpenPostDialog(true)}
-                        sx={{ background: 'linear-gradient(to right, #3b82f6, #8b5cf6)' }}
+                        sx={{ borderRadius: 20 }}
                     >
-                        Post Opportunity
+                        Post Job
                     </Button>
                 )}
             </Box>
 
-            <Tabs value={activeTab} onChange={(e, v) => setActiveTab(v)} sx={{ mb: 4, '& .MuiTabs-indicator': { backgroundColor: '#3b82f6' } }}>
-                <Tab label="Explore Opportunities" sx={{ color: 'white' }} />
-                {user.role === 'student' && <Tab label="My Applications" sx={{ color: 'white' }} />}
+            <Tabs value={activeTab} onChange={(e, v) => setActiveTab(v)} sx={{ mb: 3, bgcolor: 'white', borderRadius: 2 }}>
+                <Tab label="Search Jobs" />
+                {user.role === 'student' && <Tab label="My Applications" />}
             </Tabs>
 
-            {/* TAB 0: EXPLORE */}
             {activeTab === 0 && (
                 <Grid container spacing={3}>
-                    {internships.map((internship) => (
-                        <Grid item xs={12} md={6} lg={4} key={internship._id}>
-                            <InternshipCard
-                                internship={internship}
-                                userRole={user.role}
-                                onApply={handleApply}
-                                onDelete={handleDelete}
-                                onViewApplications={handleViewApplications}
-                            />
-                        </Grid>
-                    ))}
-                    {internships.length === 0 && (
-                        <Box width="100%" textAlign="center" mt={4}>
-                            <Typography color="text.secondary">No opportunities available at the moment.</Typography>
-                        </Box>
-                    )}
+                    {/* LEFT COLUMN: LIST */}
+                    <Grid item xs={12} md={4}>
+                        <Paper sx={{ maxHeight: '80vh', overflowY: 'auto', bgcolor: 'white' }}>
+                            {internships.map((internship) => (
+                                <Box
+                                    key={internship._id}
+                                    onClick={() => setSelectedInternship(internship)}
+                                    sx={{
+                                        p: 2,
+                                        borderBottom: '1px solid #e5e7eb',
+                                        cursor: 'pointer',
+                                        bgcolor: selectedInternship?._id === internship._id ? '#e0f2fe' : 'transparent',
+                                        '&:hover': { bgcolor: '#f3f4f6' }
+                                    }}
+                                >
+                                    <Box display="flex" gap={2}>
+                                        <Avatar variant="rounded" sx={{ bgcolor: '#3b82f6' }}>{internship.company.charAt(0)}</Avatar>
+                                        <Box>
+                                            <Typography variant="subtitle1" fontWeight="bold" color="text.primary">{internship.title}</Typography>
+                                            <Typography variant="body2" color="text.secondary">{internship.company}</Typography>
+                                            <Typography variant="caption" color="text.secondary">{internship.location} ({internship.type})</Typography>
+                                        </Box>
+                                    </Box>
+                                </Box>
+                            ))}
+                            {internships.length === 0 && <Box p={3} textAlign="center">No jobs found.</Box>}
+                        </Paper>
+                    </Grid>
+
+                    {/* RIGHT COLUMN: DETAIL */}
+                    <Grid item xs={12} md={8}>
+                        {selectedInternship ? (
+                            <Paper sx={{ p: 4, minHeight: '80vh', position: 'relative' }}>
+                                <Box display="flex" justifyContent="space-between" alignItems="start">
+                                    <Box>
+                                        <Typography variant="h4" fontWeight="bold" gutterBottom>{selectedInternship.title}</Typography>
+                                        <Typography variant="h6" color="text.secondary" gutterBottom>
+                                            {selectedInternship.company} · {selectedInternship.location}
+                                        </Typography>
+                                        <Box display="flex" gap={1} mb={2}>
+                                            <Chip icon={<WorkIcon />} label={selectedInternship.type.toUpperCase()} color="primary" size="small" variant="outlined" />
+                                            <Chip icon={<AccessTimeIcon />} label={selectedInternship.duration} size="small" variant="outlined" />
+                                            <Chip icon={<AttachMoneyIcon />} label={selectedInternship.stipend} color="success" size="small" variant="outlined" />
+                                        </Box>
+                                    </Box>
+
+                                    <Box display="flex" flexDirection="column" gap={1}>
+                                        {user.role === 'student' && (
+                                            <Button variant="contained" size="large" onClick={() => setApplyDialogOpen(true)}>Apply Now</Button>
+                                        )}
+                                        {(user.role === 'admin' || user.role === 'faculty' || user.role === 'authority') && (
+                                            <>
+                                                <Button variant="outlined" onClick={() => handleViewApplications(selectedInternship._id)}>Manage Applications</Button>
+                                                <Button variant="text" color="error" onClick={() => handleDelete(selectedInternship._id)}>Delete Job</Button>
+                                            </>
+                                        )}
+                                    </Box>
+                                </Box>
+
+                                <Divider sx={{ my: 3 }} />
+
+                                <Typography variant="h6" fontWeight="bold" gutterBottom>About the job</Typography>
+                                <Typography variant="body1" paragraph style={{ whiteSpace: 'pre-line', color: '#4b5563' }}>
+                                    {selectedInternship.description}
+                                </Typography>
+
+                                <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 4 }}>
+                                    Posted on {new Date(selectedInternship.createdAt).toLocaleDateString()}
+                                </Typography>
+                            </Paper>
+                        ) : (
+                            <Paper sx={{ p: 4, minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Typography variant="h6" color="text.secondary">Select a job to view details</Typography>
+                            </Paper>
+                        )}
+                    </Grid>
                 </Grid>
             )}
 
-            {/* TAB 1: MY APPLICATIONS (STUDENT) */}
             {activeTab === 1 && user.role === 'student' && (
-                <Box>
+                <Box maxWidth="md" mx="auto">
                     {applications.map((app) => (
-                        <Box key={app._id} component={motion.div} initial={{ opacity: 0 }} animate={{ opacity: 1 }} sx={{ mb: 2, p: 3, bgcolor: 'background.paper', borderRadius: 2, border: '1px solid rgba(255,255,255,0.1)' }}>
-                            <Box display="flex" justifyContent="space-between" alignItems="center">
-                                <Box>
-                                    <Typography variant="h6" color="primary">{app.internship.title}</Typography>
-                                    <Typography variant="body2" color="text.secondary">Applied on: {new Date(app.appliedAt).toLocaleDateString()}</Typography>
-                                </Box>
-                                <Box display="flex" alignItems="center" gap={1}>
-                                    {app.status === 'accepted' && <CheckCircleIcon color="success" />}
-                                    {app.status === 'rejected' && <CancelIcon color="error" />}
-                                    <Chip
-                                        label={app.status.toUpperCase()}
-                                        color={app.status === 'accepted' ? 'success' : app.status === 'rejected' ? 'error' : 'warning'}
-                                        variant="outlined"
-                                    />
-                                </Box>
+                        <Paper key={app._id} sx={{ p: 3, mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Box>
+                                <Typography variant="h6" fontWeight="bold">{app.internship.title}</Typography>
+                                <Typography variant="body2" color="text.secondary">{app.internship.company}</Typography>
+                                <Typography variant="caption" display="block">Applied: {new Date(app.appliedAt).toLocaleDateString()}</Typography>
                             </Box>
-                        </Box>
+                            <Chip
+                                label={app.status.toUpperCase()}
+                                color={app.status === 'accepted' ? 'success' : app.status === 'rejected' ? 'error' : 'warning'}
+                                icon={app.status === 'accepted' ? <CheckCircleIcon /> : <AccessTimeIcon />}
+                            />
+                        </Paper>
                     ))}
-                    {applications.length === 0 && <Typography align="center" color="text.secondary">You haven't applied to any roles yet.</Typography>}
+                    {applications.length === 0 && <Typography align="center" color="text.secondary">No applications yet.</Typography>}
                 </Box>
             )}
 
-            {/* POST DIALOG (FACULTY/ADMIN) */}
-            <Dialog open={openPostDialog} onClose={() => setOpenPostDialog(false)} maxWidth="md" fullWidth PaperProps={{ style: { backgroundColor: '#1e293b', color: 'white' } }}>
-                <DialogTitle>Post New Opportunity</DialogTitle>
+            {/* DIALOGS */}
+            <Dialog open={openPostDialog} onClose={() => setOpenPostDialog(false)} maxWidth="md" fullWidth>
+                <DialogTitle>Post a Job</DialogTitle>
                 <DialogContent>
-                    <Grid container spacing={2} sx={{ mt: 1 }}>
-                        <Grid item xs={12} md={6}>
-                            <TextField fullWidth label="Title" value={newInternship.title} onChange={(e) => setNewInternship({ ...newInternship, title: e.target.value })} InputProps={{ style: { color: 'white' } }} InputLabelProps={{ style: { color: '#94a3b8' } }} />
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                            <TextField fullWidth label="Company/Lab" value={newInternship.company} onChange={(e) => setNewInternship({ ...newInternship, company: e.target.value })} InputProps={{ style: { color: 'white' } }} InputLabelProps={{ style: { color: '#94a3b8' } }} />
-                        </Grid>
-                        <Grid item xs={12}>
-                            <TextField fullWidth multiline rows={4} label="Description" value={newInternship.description} onChange={(e) => setNewInternship({ ...newInternship, description: e.target.value })} InputProps={{ style: { color: 'white' } }} InputLabelProps={{ style: { color: '#94a3b8' } }} />
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                            <TextField select fullWidth label="Type" value={newInternship.type} onChange={(e) => setNewInternship({ ...newInternship, type: e.target.value })} InputProps={{ style: { color: 'white' } }} InputLabelProps={{ style: { color: '#94a3b8' } }}>
+                    <Grid container spacing={2} sx={{ mt: 0.5 }}>
+                        <Grid item xs={6}><TextField fullWidth label="Job Title" value={newInternship.title} onChange={(e) => setNewInternship({ ...newInternship, title: e.target.value })} /></Grid>
+                        <Grid item xs={6}><TextField fullWidth label="Company" value={newInternship.company} onChange={(e) => setNewInternship({ ...newInternship, company: e.target.value })} /></Grid>
+                        <Grid item xs={12}><TextField fullWidth multiline rows={4} label="Description" value={newInternship.description} onChange={(e) => setNewInternship({ ...newInternship, description: e.target.value })} /></Grid>
+                        <Grid item xs={6}>
+                            <TextField select fullWidth label="Type" value={newInternship.type} onChange={(e) => setNewInternship({ ...newInternship, type: e.target.value })}>
                                 <MenuItem value="internship">Internship</MenuItem>
                                 <MenuItem value="research">Research</MenuItem>
                                 <MenuItem value="project">Project</MenuItem>
                             </TextField>
                         </Grid>
-                        <Grid item xs={12} md={6}>
-                            <TextField fullWidth label="Location" value={newInternship.location} onChange={(e) => setNewInternship({ ...newInternship, location: e.target.value })} InputProps={{ style: { color: 'white' } }} InputLabelProps={{ style: { color: '#94a3b8' } }} />
-                        </Grid>
-                        <Grid item xs={6}>
-                            <TextField fullWidth label="Stipend" value={newInternship.stipend} onChange={(e) => setNewInternship({ ...newInternship, stipend: e.target.value })} InputProps={{ style: { color: 'white' } }} InputLabelProps={{ style: { color: '#94a3b8' } }} />
-                        </Grid>
-                        <Grid item xs={6}>
-                            <TextField fullWidth label="Duration" value={newInternship.duration} onChange={(e) => setNewInternship({ ...newInternship, duration: e.target.value })} InputProps={{ style: { color: 'white' } }} InputLabelProps={{ style: { color: '#94a3b8' } }} />
-                        </Grid>
-                        <Grid item xs={12}>
-                            <TextField type="date" fullWidth label="Deadline" InputLabelProps={{ shrink: true, style: { color: '#94a3b8' } }} value={newInternship.deadline} onChange={(e) => setNewInternship({ ...newInternship, deadline: e.target.value })} InputProps={{ style: { color: 'white' } }} />
-                        </Grid>
+                        <Grid item xs={6}><TextField fullWidth label="Location" value={newInternship.location} onChange={(e) => setNewInternship({ ...newInternship, location: e.target.value })} /></Grid>
+                        <Grid item xs={6}><TextField fullWidth label="Stipend" value={newInternship.stipend} onChange={(e) => setNewInternship({ ...newInternship, stipend: e.target.value })} /></Grid>
+                        <Grid item xs={6}><TextField fullWidth label="Duration" value={newInternship.duration} onChange={(e) => setNewInternship({ ...newInternship, duration: e.target.value })} /></Grid>
+                        <Grid item xs={12}><TextField type="date" fullWidth label="Deadline" InputLabelProps={{ shrink: true }} value={newInternship.deadline} onChange={(e) => setNewInternship({ ...newInternship, deadline: e.target.value })} /></Grid>
                     </Grid>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setOpenPostDialog(false)} color="inherit">Cancel</Button>
-                    <Button onClick={handlePostInternship} variant="contained" color="primary">Post Now</Button>
+                    <Button onClick={() => setOpenPostDialog(false)}>Cancel</Button>
+                    <Button variant="contained" onClick={handlePostInternship}>Post</Button>
                 </DialogActions>
             </Dialog>
 
-            {/* VIEW APPLICATIONS DIALOG (FACULTY) */}
-            <Dialog open={openAppsDialog} onClose={() => setOpenAppsDialog(false)} maxWidth="md" fullWidth PaperProps={{ style: { backgroundColor: '#1e293b', color: 'white' } }}>
-                <DialogTitle>Applications for {selectedInternshipTitle}</DialogTitle>
+            <Dialog open={applyDialogOpen} onClose={() => setApplyDialogOpen(false)} maxWidth="sm" fullWidth>
+                <DialogTitle>Easy Apply</DialogTitle>
                 <DialogContent>
-                    {selectedInternshipApps.length === 0 ? (
-                        <Typography color="text.secondary">No applications yet.</Typography>
-                    ) : (
-                        selectedInternshipApps.map((app) => (
-                            <Box key={app._id} sx={{ mb: 2, p: 2, border: '1px solid rgba(255,255,255,0.1)', borderRadius: 2 }}>
-                                <Grid container alignItems="center" spacing={2}>
-                                    <Grid item xs={12} sm={4}>
-                                        <Typography variant="subtitle1" fontWeight="bold">{app.student.username || 'Student'}</Typography>
-                                        <Typography variant="body2" color="text.secondary">{app.student.email}</Typography>
-                                    </Grid>
-                                    <Grid item xs={12} sm={4}>
-                                        <a href={app.resumeLink} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
-                                            View Resume
-                                        </a>
-                                        <Box mt={1}>
-                                            <Chip label={app.status.toUpperCase()} size="small" color={app.status === 'accepted' ? 'success' : app.status === 'rejected' ? 'error' : 'warning'} />
-                                        </Box>
-                                    </Grid>
-                                    <Grid item xs={12} sm={4} display="flex" gap={1} justifyContent="flex-end">
-                                        <Button size="small" variant="contained" color="success" onClick={() => handleUpdateStatus(app._id, 'accepted')} disabled={app.status === 'accepted'}>Accept</Button>
-                                        <Button size="small" variant="outlined" color="error" onClick={() => handleUpdateStatus(app._id, 'rejected')} disabled={app.status === 'rejected'}>Reject</Button>
-                                    </Grid>
-                                </Grid>
-                            </Box>
-                        ))
-                    )}
+                    <TextField fullWidth autoFocus margin="dense" label="Resume Link (Drive/LinkedIn)" value={resumeLink} onChange={(e) => setResumeLink(e.target.value)} />
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setOpenAppsDialog(false)} color="inherit">Close</Button>
+                    <Button onClick={() => setApplyDialogOpen(false)}>Cancel</Button>
+                    <Button variant="contained" onClick={handleApply}>Submit Application</Button>
                 </DialogActions>
+            </Dialog>
+
+            <Dialog open={openAppsDialog} onClose={() => setOpenAppsDialog(false)} maxWidth="md" fullWidth>
+                <DialogTitle>Applicants</DialogTitle>
+                <DialogContent>
+                    {selectedInternshipApps.map(app => (
+                        <Box key={app._id} sx={{ p: 2, borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Box>
+                                <Typography variant="subtitle1" fontWeight="bold">{app.student.username || 'Student'}</Typography>
+                                <a href={app.resumeLink} target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb' }}>View Resume</a>
+                            </Box>
+                            <Box display="flex" gap={1}>
+                                <Button size="small" variant="contained" color="success" onClick={() => handleUpdateStatus(app._id, 'accepted')} disabled={app.status === 'accepted'}>Accept</Button>
+                                <Button size="small" variant="outlined" color="error" onClick={() => handleUpdateStatus(app._id, 'rejected')} disabled={app.status === 'rejected'}>Reject</Button>
+                            </Box>
+                        </Box>
+                    ))}
+                    {selectedInternshipApps.length === 0 && <Typography>No applicants yet.</Typography>}
+                </DialogContent>
+                <DialogActions><Button onClick={() => setOpenAppsDialog(false)}>Close</Button></DialogActions>
             </Dialog>
         </Box>
     );

@@ -60,7 +60,7 @@ exports.addResource = asyncHandler(async (req, res, next) => {
     }
 
     // Check ownership of course
-    if (course.faculty.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (course.faculty.toString() !== req.user.id && req.user.role !== 'admin' && req.user.role !== 'authority') {
         return next(new ErrorResponse(`User ${req.user.id} is not authorized to add a resource to course ${course._id}`, 401));
     }
 

@@ -67,7 +67,7 @@ exports.updateCourse = asyncHandler(async (req, res, next) => {
     }
 
     // Make sure user is course owner
-    if (course.faculty.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (course.faculty.toString() !== req.user.id && req.user.role !== 'admin' && req.user.role !== 'authority') {
         return next(new ErrorResponse(`User ${req.user.id} is not authorized to update this course`, 401));
     }
 
@@ -93,7 +93,7 @@ exports.deleteCourse = asyncHandler(async (req, res, next) => {
     }
 
     // Make sure user is course owner
-    if (course.faculty.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (course.faculty.toString() !== req.user.id && req.user.role !== 'admin' && req.user.role !== 'authority') {
         return next(new ErrorResponse(`User ${req.user.id} is not authorized to delete this course`, 401));
     }
 

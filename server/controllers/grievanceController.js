@@ -11,8 +11,11 @@ exports.getGrievances = asyncHandler(async (req, res, next) => {
     if (req.user.role === 'admin' || req.user.role === 'authority') {
         const grievances = await Grievance.find();
         res.status(200).json({ success: true, count: grievances.length, data: grievances });
+    } else if (req.user.role === 'student') {
+        const grievances = await Grievance.find({ user: req.user.id });
+        res.status(200).json({ success: true, count: grievances.length, data: grievances });
     } else {
-        return next(new ErrorResponse('Not authorized to access all grievances', 403));
+        return next(new ErrorResponse('Not authorized to access grievances', 403));
     }
 });
 
