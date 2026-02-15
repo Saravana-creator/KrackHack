@@ -52,7 +52,7 @@ const AcademicPortal = () => {
   const [stats, setStats] = useState({ credits: 0, attendance: 0 });
 
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState("dashboard"); // 'dashboard', 'catalog', 'course-detail'
+  const [view, setView] = useState("my-courses"); // Default to 'my-courses' (Classes)
   const [selectedCourse, setSelectedCourse] = useState(null);
 
   // Course Detail State
@@ -210,316 +210,155 @@ const AcademicPortal = () => {
       </Box>
     );
 
-  // ------------------- DASHBOARD & SUB-VIEWS -------------------
+  // ------------------- CLASSROOM STYLE LAYOUT -------------------
   if (view !== "course-detail") {
     return (
-      <Box
-        sx={{
-          minHeight: "100vh",
-          bgcolor: "background.default",
-          display: "flex",
-        }}
-      >
-        {/* SIDEBAR NAVIGATION (Simple column for now) */}
-        <Paper
+      <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
+        {/* TOP APP BAR */}
+        <Box
           sx={{
-            width: 280,
             bgcolor: "#1e293b",
-            color: "white",
-            display: { xs: "none", md: "flex" },
-            flexDirection: "column",
-            p: 2,
-            borderRight: "1px solid rgba(255,255,255,0.1)",
+            borderBottom: "1px solid rgba(255,255,255,0.1)",
+            position: "sticky",
+            top: 0,
+            zIndex: 10,
           }}
         >
-          <Typography
-            variant="h5"
-            fontWeight="bold"
-            sx={{
-              mb: 4,
-              px: 2,
-              background: "linear-gradient(45deg, #a855f7, #ec4899)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}
-          >
-            Academic Hub
-          </Typography>
+          <Container maxWidth="xl">
+            <Box
+              display="flex"
+              alignItems="center"
+              justifyContent="space-between"
+              py={2}
+            >
+              <Box display="flex" alignItems="center" gap={2}>
+                <Typography
+                  variant="h5"
+                  fontWeight="bold"
+                  sx={{
+                    background: "linear-gradient(45deg, #3b82f6, #14b8a6)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    mr: 4,
+                  }}
+                >
+                  Academic Hub
+                </Typography>
 
-          <List component="nav">
-            <ListItem
-              button
-              selected={view === "dashboard"}
-              onClick={() => setView("dashboard")}
-              sx={{
-                borderRadius: 2,
-                mb: 1,
-                "&.Mui-selected": { bgcolor: "rgba(59, 130, 246, 0.2)" },
-              }}
-            >
-              <ListItemIcon sx={{ color: "white" }}>
-                <AssessmentIcon />
-              </ListItemIcon>
-              <ListItemText primary="Dashboard" />
-            </ListItem>
-            <ListItem
-              button
-              selected={view === "my-courses"}
-              onClick={() => setView("my-courses")}
-              sx={{
-                borderRadius: 2,
-                mb: 1,
-                "&.Mui-selected": { bgcolor: "rgba(59, 130, 246, 0.2)" },
-              }}
-            >
-              <ListItemIcon sx={{ color: "white" }}>
-                <FolderIcon />
-              </ListItemIcon>
-              <ListItemText primary="My Classes" />
-            </ListItem>
-            <ListItem
-              button
-              selected={view === "catalog"}
-              onClick={() => setView("catalog")}
-              sx={{
-                borderRadius: 2,
-                mb: 1,
-                "&.Mui-selected": { bgcolor: "rgba(59, 130, 246, 0.2)" },
-              }}
-            >
-              <ListItemIcon sx={{ color: "white" }}>
-                <AddIcon />
-              </ListItemIcon>
-              <ListItemText primary="Course Catalog" />
-            </ListItem>
-            <ListItem
-              button
-              selected={view === "attendance"}
-              onClick={() => setView("attendance")}
-              sx={{
-                borderRadius: 2,
-                mb: 1,
-                "&.Mui-selected": { bgcolor: "rgba(59, 130, 246, 0.2)" },
-              }}
-            >
-              <ListItemIcon sx={{ color: "white" }}>
-                <CheckCircleIcon />
-              </ListItemIcon>
-              <ListItemText primary="Attendance" />
-            </ListItem>
-            <ListItem
-              button
-              selected={view === "calendar"}
-              onClick={() => setView("calendar")}
-              sx={{
-                borderRadius: 2,
-                mb: 1,
-                "&.Mui-selected": { bgcolor: "rgba(59, 130, 246, 0.2)" },
-              }}
-            >
-              <ListItemIcon sx={{ color: "white" }}>
-                <CalendarMonthIcon />
-              </ListItemIcon>
-              <ListItemText primary="Calendar" />
-            </ListItem>
-            <ListItem
-              button
-              selected={view === "library"}
-              onClick={() => setView("library")}
-              sx={{
-                borderRadius: 2,
-                mb: 1,
-                "&.Mui-selected": { bgcolor: "rgba(59, 130, 246, 0.2)" },
-              }}
-            >
-              <ListItemIcon sx={{ color: "white" }}>
-                <DescriptionIcon />
-              </ListItemIcon>
-              <ListItemText primary="Library" />
-            </ListItem>
-          </List>
-        </Paper>
+                {/* Navigation Tabs */}
+                <Box display={{ xs: "none", md: "flex" }} gap={1}>
+                  <Button
+                    onClick={() => setView("my-courses")}
+                    sx={{
+                      color: view === "my-courses" ? "#3b82f6" : "white",
+                      borderBottom:
+                        view === "my-courses"
+                          ? "2px solid #3b82f6"
+                          : "2px solid transparent",
+                      borderRadius: 0,
+                    }}
+                  >
+                    Classes
+                  </Button>
+                  <Button
+                    onClick={() => setView("calendar")}
+                    sx={{
+                      color: view === "calendar" ? "#3b82f6" : "white",
+                      borderBottom:
+                        view === "calendar"
+                          ? "2px solid #3b82f6"
+                          : "2px solid transparent",
+                      borderRadius: 0,
+                    }}
+                  >
+                    Calendar
+                  </Button>
+                  <Button
+                    onClick={() => setView("library")}
+                    sx={{
+                      color: view === "library" ? "#3b82f6" : "white",
+                      borderBottom:
+                        view === "library"
+                          ? "2px solid #3b82f6"
+                          : "2px solid transparent",
+                      borderRadius: 0,
+                    }}
+                  >
+                    Library
+                  </Button>
+                </Box>
+              </Box>
+
+              <Box display="flex" alignItems="center" gap={2}>
+                <Button
+                  variant="outlined"
+                  startIcon={<AddIcon />}
+                  onClick={() => setView("catalog")}
+                  sx={{
+                    borderColor: "rgba(255,255,255,0.3)",
+                    color: "white",
+                    "&:hover": { borderColor: "white" },
+                  }}
+                >
+                  Join Class
+                </Button>
+                {(user.role === "admin" || user.role === "faculty") && (
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={() => setOpenAddCourse(true)}
+                    sx={{
+                      bgcolor: "#3b82f6",
+                      "&:hover": { bgcolor: "#2563eb" },
+                    }}
+                  >
+                    Create
+                  </Button>
+                )}
+                <Avatar sx={{ bgcolor: "#ec4899" }}>
+                  {user.username?.charAt(0)}
+                </Avatar>
+              </Box>
+            </Box>
+          </Container>
+        </Box>
 
         {/* MAIN CONTENT AREA */}
-        <Box sx={{ flexGrow: 1, p: 4, overflowY: "auto", height: "100vh" }}>
-          {/* DASHBOARD VIEW */}
-          {view === "dashboard" && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <Typography
-                variant="h4"
-                color="text.primary"
-                fontWeight="bold"
-                gutterBottom
-              >
-                Welcome back, {user?.username}
-              </Typography>
-
-              {/* STATS CARDS */}
-              <Grid container spacing={3} mb={4}>
-                <Grid item xs={12} md={4}>
-                  <Paper
-                    sx={{
-                      p: 3,
-                      borderRadius: 3,
-                      bgcolor: "#1e293b",
-                      color: "white",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 2,
-                    }}
-                  >
-                    <Avatar sx={{ bgcolor: "#a855f7", width: 56, height: 56 }}>
-                      <TrendingUpIcon fontSize="large" />
-                    </Avatar>
-                    <Box>
-                      <Typography variant="h4" fontWeight="bold">
-                        {stats.credits}
+        <Container maxWidth="xl" sx={{ mt: 4, pb: 8 }}>
+          {/* MY CLASSES VIEW (Default) */}
+          {view === "my-courses" && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <Grid container spacing={3}>
+                {myCourses.map((course) => (
+                  <Grid item xs={12} md={6} lg={4} key={course._id}>
+                    <CourseCard
+                      course={course}
+                      userRole={user.role}
+                      userId={user.id}
+                      onViewResources={handleEnterCourse}
+                    />
+                  </Grid>
+                ))}
+                {myCourses.length === 0 && (
+                  <Grid item xs={12}>
+                    <Box
+                      textAlign="center"
+                      py={8}
+                      bgcolor="#1e293b"
+                      borderRadius={2}
+                    >
+                      <Typography variant="h6" color="text.secondary" mb={2}>
+                        You don't have any classes yet.
                       </Typography>
-                      <Typography variant="body2" color="#94a3b8">
-                        Total Credits
-                      </Typography>
-                    </Box>
-                  </Paper>
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <Paper
-                    sx={{
-                      p: 3,
-                      borderRadius: 3,
-                      bgcolor: "#1e293b",
-                      color: "white",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 2,
-                    }}
-                  >
-                    <Avatar sx={{ bgcolor: "#3b82f6", width: 56, height: 56 }}>
-                      <CheckCircleIcon fontSize="large" />
-                    </Avatar>
-                    <Box>
-                      <Typography variant="h4" fontWeight="bold">
-                        {stats.attendance} Days
-                      </Typography>
-                      <Typography variant="body2" color="#94a3b8">
-                        Attendance Logged
-                      </Typography>
-                    </Box>
-                  </Paper>
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <Paper
-                    sx={{
-                      p: 3,
-                      borderRadius: 3,
-                      bgcolor: "#1e293b",
-                      color: "white",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 2,
-                    }}
-                  >
-                    <Avatar sx={{ bgcolor: "#ec4899", width: 56, height: 56 }}>
-                      <FolderIcon fontSize="large" />
-                    </Avatar>
-                    <Box>
-                      <Typography variant="h4" fontWeight="bold">
-                        {enrollments.length}
-                      </Typography>
-                      <Typography variant="body2" color="#94a3b8">
-                        Active Courses
-                      </Typography>
-                    </Box>
-                  </Paper>
-                </Grid>
-              </Grid>
-
-              <Grid container spacing={4}>
-                {/* QUICK ATTENDANCE */}
-                <Grid item xs={12} md={6}>
-                  <Paper
-                    sx={{
-                      p: 3,
-                      borderRadius: 3,
-                      bgcolor: "#1e293b",
-                      color: "white",
-                    }}
-                  >
-                    <Typography variant="h6" gutterBottom fontWeight="bold">
-                      Mark Attendance Today
-                    </Typography>
-                    <Box display="flex" gap={2} mt={2}>
-                      <TextField
-                        select
-                        fullWidth
-                        size="small"
-                        value={attendanceStatus}
-                        onChange={(e) => setAttendanceStatus(e.target.value)}
-                        SelectProps={{ native: true }}
-                        InputProps={{ style: { color: "white" } }}
-                        sx={{
-                          "& .MuiOutlinedInput-notchedOutline": {
-                            borderColor: "rgba(255,255,255,0.2)",
-                          },
-                        }}
-                      >
-                        <option value="Present" style={{ color: "black" }}>
-                          Present
-                        </option>
-                        <option value="Absent" style={{ color: "black" }}>
-                          Absent
-                        </option>
-                      </TextField>
                       <Button
                         variant="contained"
-                        color="success"
-                        onClick={handleLogAttendance}
+                        onClick={() => setView("catalog")}
                       >
-                        Log
+                        Browse Catalog
                       </Button>
                     </Box>
-                  </Paper>
-                </Grid>
-
-                {/* UPCOMING EVENTS */}
-                <Grid item xs={12} md={6}>
-                  <Paper
-                    sx={{
-                      p: 3,
-                      borderRadius: 3,
-                      bgcolor: "#1e293b",
-                      color: "white",
-                      minHeight: 150,
-                    }}
-                  >
-                    <Typography variant="h6" gutterBottom fontWeight="bold">
-                      Upcoming Events
-                    </Typography>
-                    {events.slice(0, 3).map((ev, i) => (
-                      <Box
-                        key={i}
-                        display="flex"
-                        justifyContent="space-between"
-                        mb={1}
-                        p={1}
-                        bgcolor="rgba(255,255,255,0.05)"
-                        borderRadius={1}
-                      >
-                        <Typography variant="body2">{ev.title}</Typography>
-                        <Typography variant="caption" color="#94a3b8">
-                          {new Date(ev.date).toLocaleDateString()}
-                        </Typography>
-                      </Box>
-                    ))}
-                    {events.length === 0 && (
-                      <Typography variant="body2" color="#94a3b8">
-                        No upcoming events.
-                      </Typography>
-                    )}
-                  </Paper>
-                </Grid>
+                  </Grid>
+                )}
               </Grid>
             </motion.div>
           )}
@@ -527,25 +366,9 @@ const AcademicPortal = () => {
           {/* CATALOG VIEW */}
           {view === "catalog" && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <Box
-                display="flex"
-                justifyContent="space-between"
-                alignItems="center"
-                mb={4}
-              >
-                <Typography variant="h4" color="text.primary" fontWeight="bold">
-                  Course Catalog
-                </Typography>
-                {(user.role === "admin" || user.role === "faculty") && (
-                  <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={() => setOpenAddCourse(true)}
-                  >
-                    Add Course
-                  </Button>
-                )}
-              </Box>
+              <Typography variant="h4" color="white" fontWeight="bold" mb={4}>
+                Course Catalog
+              </Typography>
               <Grid container spacing={3}>
                 {courses.map((course) => {
                   const isEnrolled = enrollments.some(
@@ -579,118 +402,11 @@ const AcademicPortal = () => {
             </motion.div>
           )}
 
-          {/* MY COURSES VIEW */}
-          {view === "my-courses" && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <Typography
-                variant="h4"
-                color="text.primary"
-                fontWeight="bold"
-                mb={4}
-              >
-                My Enrolled Classes
-              </Typography>
-              <Grid container spacing={3}>
-                {myCourses.map((course) => (
-                  <Grid item xs={12} md={6} lg={4} key={course._id}>
-                    <CourseCard
-                      course={course}
-                      userRole={user.role}
-                      userId={user.id}
-                      onViewResources={handleEnterCourse}
-                    />
-                  </Grid>
-                ))}
-                {myCourses.length === 0 && (
-                  <Grid item xs={12}>
-                    <Paper
-                      sx={{
-                        p: 4,
-                        textAlign: "center",
-                        bgcolor: "#1e293b",
-                        color: "text.secondary",
-                      }}
-                    >
-                      <Typography>
-                        You are not enrolled in any courses.
-                      </Typography>
-                      <Button sx={{ mt: 2 }} onClick={() => setView("catalog")}>
-                        Browse Catalog
-                      </Button>
-                    </Paper>
-                  </Grid>
-                )}
-              </Grid>
-            </motion.div>
-          )}
-
-          {/* ATTENDANCE VIEW */}
-          {view === "attendance" && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <Typography
-                variant="h4"
-                color="text.primary"
-                fontWeight="bold"
-                mb={4}
-              >
-                Attendance History
-              </Typography>
-              <Paper
-                sx={{ bgcolor: "#1e293b", borderRadius: 2, overflow: "hidden" }}
-              >
-                <List>
-                  {attendance.map((att, i) => (
-                    <React.Fragment key={att._id}>
-                      <ListItem>
-                        <ListItemIcon>
-                          {att.status === "Present" ? (
-                            <CheckCircleIcon color="success" />
-                          ) : (
-                            <TrendingUpIcon color="error" />
-                          )}
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={
-                            <Typography color="white">
-                              {new Date(att.date).toLocaleDateString()}
-                            </Typography>
-                          }
-                          secondary={
-                            <Typography color="#94a3b8">
-                              {att.status}
-                            </Typography>
-                          }
-                        />
-                      </ListItem>
-                      {i < attendance.length - 1 && (
-                        <Divider
-                          sx={{ borderColor: "rgba(255,255,255,0.1)" }}
-                        />
-                      )}
-                    </React.Fragment>
-                  ))}
-                  {attendance.length === 0 && (
-                    <Box p={4} textAlign="center">
-                      <Typography color="text.secondary">
-                        No records found.
-                      </Typography>
-                    </Box>
-                  )}
-                </List>
-              </Paper>
-            </motion.div>
-          )}
-
           {/* CALENDAR VIEW */}
           {view === "calendar" && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <Typography
-                variant="h4"
-                color="text.primary"
-                fontWeight="bold"
-                mb={4}
-              >
-                Academic Calendar
+              <Typography variant="h4" color="white" fontWeight="bold" mb={4}>
+                Your Calendar
               </Typography>
               <Grid container spacing={2}>
                 {events.map((ev) => (
@@ -707,7 +423,6 @@ const AcademicPortal = () => {
                       <Typography variant="body2" color="#94a3b8" gutterBottom>
                         {new Date(ev.date).toLocaleDateString()}
                       </Typography>
-                      <Typography variant="body2">{ev.description}</Typography>
                       <Typography
                         variant="caption"
                         sx={{
@@ -720,11 +435,19 @@ const AcademicPortal = () => {
                           width: "fit-content",
                         }}
                       >
-                        {ev.type}
+                        {/* Show Course Name if Linked */}
+                        {ev.relatedCourse
+                          ? ev.courseName || "Course Event"
+                          : ev.type || "General"}
                       </Typography>
                     </Paper>
                   </Grid>
                 ))}
+                {events.length === 0 && (
+                  <Typography color="text.secondary">
+                    No upcoming events.
+                  </Typography>
+                )}
               </Grid>
             </motion.div>
           )}
@@ -732,13 +455,8 @@ const AcademicPortal = () => {
           {/* LIBRARY VIEW */}
           {view === "library" && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <Typography
-                variant="h4"
-                color="text.primary"
-                fontWeight="bold"
-                mb={4}
-              >
-                Resource Library
+              <Typography variant="h4" color="white" fontWeight="bold" mb={4}>
+                Library Resources
               </Typography>
               <Box mb={4}>
                 <TextField
@@ -782,15 +500,10 @@ const AcademicPortal = () => {
                     </Paper>
                   </Grid>
                 ))}
-                {resources.length === 0 && (
-                  <Typography color="text.secondary">
-                    No resources found.
-                  </Typography>
-                )}
               </Grid>
             </motion.div>
           )}
-        </Box>
+        </Container>
 
         {/* CREATE COURSE DIALOG - Re-used */}
         <Dialog
