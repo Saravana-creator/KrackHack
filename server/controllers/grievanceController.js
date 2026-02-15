@@ -1,6 +1,7 @@
 const Grievance = require("../models/Grievance");
 const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("express-async-handler");
+const ROLES = require('../constants/roles');
 
 // @desc      Get all grievances (Admin/Authority only)
 // @route     GET /api/v1/grievances
@@ -11,11 +12,11 @@ const asyncHandler = require("express-async-handler");
 exports.getGrievances = asyncHandler(async (req, res, next) => {
   let grievances;
 
-  if (req.user.role === "admin" || req.user.role === "authority") {
+  if (req.user.role === ROLES.ADMIN || req.user.role === ROLES.AUTHORITY) {
     grievances = await Grievance.find()
       .populate("user", "username email department")
       .populate("assignedTo", "username email");
-  } else if (req.user.role === "student") {
+  } else if (req.user.role === ROLES.STUDENT) {
     grievances = await Grievance.find({ user: req.user.id }).populate(
       "assignedTo",
       "username email",
@@ -62,7 +63,7 @@ exports.createGrievance = asyncHandler(async (req, res, next) => {
   }
 
   // Check if user is a student
-  if (req.user.role !== "student") {
+  if (req.user.role !== ROLES.STUDENT) {
     return next(
       new ErrorResponse(
         `User with role ${req.user.role} is not authorized to submit a grievance`,
@@ -109,8 +110,8 @@ exports.createGrievance = asyncHandler(async (req, res, next) => {
 
   // Notify Admins and Authorities
   req.io
-    .to("admin")
-    .to("authority")
+    .to(ROLES.ADMIN)
+    .to(ROLES.AUTHORITY)
     .emit("notification", {
       message: `New Grievance Submitted by ${req.user.username}`,
       grievance,
@@ -142,7 +143,7 @@ exports.getGrievance = asyncHandler(async (req, res, next) => {
   // Identify if the user is the owner or an admin/authority
   if (
     grievance.user._id.toString() !== req.user.id &&
-    req.user.role === "student"
+    req.user.role === ROLES.STUDENT
   ) {
     return next(
       new ErrorResponse(
@@ -178,7 +179,7 @@ exports.updateGrievance = asyncHandler(async (req, res, next) => {
 
   // Check ownership/permissions
   if (
-    req.user.role === "student" &&
+    req.user.role === ROLES.STUDENT &&
     grievance.user.toString() !== req.user.id
   ) {
     return next(
@@ -190,7 +191,7 @@ exports.updateGrievance = asyncHandler(async (req, res, next) => {
   }
 
   // Student Restrictions
-  if (req.user.role === "student") {
+  if (req.user.role === ROLES.STUDENT) {
     // Students can only update title, description, category
     // Cannot update status, assignedTo, remarks, timeline
     if (req.body.status || req.body.assignedTo || req.body.remarks) {
@@ -204,7 +205,7 @@ exports.updateGrievance = asyncHandler(async (req, res, next) => {
   }
 
   // Timeline Logic for Admin/Authority
-  if (req.user.role === "admin" || req.user.role === "authority") {
+  if (req.user.role === ROLES.ADMIN || req.user.role === ROLES.AUTHORITY) {
     let timelineComment = "";
     let shouldPush = false;
     let pushData = null;

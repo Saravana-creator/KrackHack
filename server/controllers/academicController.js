@@ -130,9 +130,27 @@ exports.getEvents = asyncHandler(async (req, res, next) => {
   });
 });
 
-// @desc      Create academic event
-// @route     POST /api/v1/academics/events
-// @access    Private (Admin, Authority, Faculty)
+// @desc      Get faculty-specific academic data (Courses taught, events created)
+// @route     GET /api/v1/academics/faculty
+// @access    Private (Faculty)
+exports.getFacultyAcademics = asyncHandler(async (req, res, next) => {
+  const facultyId = req.user.id; 
+
+  const courses = await Course.find({
+    faculty: facultyId
+  });
+
+  const events = await AcademicEvent.find({
+    createdBy: facultyId
+  }).populate("course", "title courseCode"); 
+
+  res.status(200).json({
+    success: true,
+    courses,
+    events
+  });
+});
+
 exports.createEvent = asyncHandler(async (req, res, next) => {
   req.body.createdBy = req.user.id;
 

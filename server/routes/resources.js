@@ -8,11 +8,12 @@ const {
 const router = express.Router({ mergeParams: true });
 
 const { protect, authorize } = require('../middleware/auth');
+const ROLES = require('../constants/roles');
 
 router
     .route('/')
     .get(getResources)
-    .post(protect, authorize('faculty', 'admin', 'authority'), addResource);
+    .post(protect, authorize(ROLES.FACULTY, ROLES.ADMIN, ROLES.AUTHORITY), addResource);
 
 router
     .route('/:id')

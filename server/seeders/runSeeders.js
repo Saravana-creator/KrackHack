@@ -6,6 +6,7 @@ dotenv.config();
 
 // Load models
 const User = require('../models/User');
+const ROLES = require('../constants/roles');
 
 // Load Seeding Functions
 const seedOpportunities = require('./opportunitySeeder');
@@ -33,14 +34,14 @@ const runSeeders = async () => {
         console.log('Checking/Creating Users...');
         
         // 1. Ensure Admin
-        let admin = await User.findOne({ role: 'admin' });
+        let admin = await User.findOne({ role: ROLES.ADMIN });
         if (!admin) {
             console.log('Creating Admin User...');
             admin = await User.create({
                 username: 'System Admin',
                 email: 'admin@aegis.com',
                 password: 'password123',
-                role: 'admin',
+                role: ROLES.ADMIN,
                 department: 'None'
             });
         }
@@ -53,7 +54,7 @@ const runSeeders = async () => {
                 username: 'Dr. Alan Turing',
                 email: 'alan@aegis.com',
                 password: 'password123',
-                role: 'faculty',
+                role: ROLES.FACULTY,
                 department: 'CSE'
             });
         }
@@ -66,7 +67,7 @@ const runSeeders = async () => {
                 username: 'John Doe',
                 email: 'john@student.aegis.com',
                 password: 'password123',
-                role: 'student',
+                role: ROLES.STUDENT,
                 department: 'CSE'
             });
         }

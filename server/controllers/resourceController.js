@@ -2,6 +2,7 @@ const Resource = require("../models/Resource");
 const Course = require("../models/Course");
 const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("express-async-handler");
+const ROLES = require('../constants/roles');
 
 // @desc      Get resources for a course
 // @route     GET /api/v1/courses/:courseId/resources
@@ -75,8 +76,8 @@ exports.addResource = asyncHandler(async (req, res, next) => {
   // Check ownership of course
   if (
     course.faculty.toString() !== req.user.id &&
-    req.user.role !== "admin" &&
-    req.user.role !== "authority"
+    req.user.role !== ROLES.ADMIN &&
+    req.user.role !== ROLES.AUTHORITY
   ) {
     return next(
       new ErrorResponse(

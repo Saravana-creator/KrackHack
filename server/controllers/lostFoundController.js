@@ -1,6 +1,7 @@
 const LostFoundItem = require('../models/LostFoundItem');
 const ErrorResponse = require('../utils/errorResponse');
 const asyncHandler = require('express-async-handler');
+const ROLES = require('../constants/roles');
 
 // @desc      Get all lost & found items
 // @route     GET /api/v1/lostfound
@@ -73,7 +74,7 @@ exports.updateItem = asyncHandler(async (req, res, next) => {
     }
 
     // Check ownership
-    if (item.postedBy.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (item.postedBy.toString() !== req.user.id && req.user.role !== ROLES.ADMIN) {
         return next(new ErrorResponse(`Not authorized to update this item`, 401));
     }
 
@@ -99,7 +100,7 @@ exports.deleteItem = asyncHandler(async (req, res, next) => {
     }
 
     // Check ownership
-    if (item.postedBy.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (item.postedBy.toString() !== req.user.id && req.user.role !== ROLES.ADMIN) {
         return next(new ErrorResponse(`Not authorized to delete this item`, 401));
     }
 

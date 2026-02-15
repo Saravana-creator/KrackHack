@@ -20,6 +20,8 @@ import Profile from './pages/Profile';
 import AdminDomains from './pages/AdminDomains';
 import Opportunities from './pages/Opportunities';
 import LostFound from './pages/LostFound';
+import FacultyOpportunities from './pages/faculty/FacultyOpportunities';
+import FacultyApplications from './pages/faculty/FacultyApplications';
 
 const theme = createTheme({
     palette: {
@@ -99,6 +101,10 @@ function App() {
                             <Route path="/admin/domains" element={<AdminDomains />} />
                             <Route path="/careers" element={<Opportunities />} />
                             <Route path="/lost-found" element={<LostFound />} />
+                            
+                            {/* Faculty Routes */}
+                            <Route path="/faculty/opportunities" element={<FacultyOpportunities />} />
+                            <Route path="/faculty/applications/:id" element={<FacultyApplications />} />
                         </Route>
                     </Route>
                 </Routes>

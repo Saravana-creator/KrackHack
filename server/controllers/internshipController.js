@@ -2,6 +2,7 @@ const Internship = require('../models/Internship');
 const Application = require('../models/Application');
 const ErrorResponse = require('../utils/errorResponse');
 const asyncHandler = require('express-async-handler');
+const ROLES = require('../constants/roles');
 
 // @desc      Get all internships
 // @route     GET /api/v1/internships
@@ -57,7 +58,7 @@ exports.createInternship = asyncHandler(async (req, res, next) => {
     req.body.createdBy = req.user.id;
 
     // Check published internship by role
-    if (req.user.role === 'student') {
+    if (req.user.role === ROLES.STUDENT) {
         return next(new ErrorResponse(`Role ${req.user.role} is not authorized to add an internship`, 403));
     }
 
@@ -80,7 +81,7 @@ exports.updateInternship = asyncHandler(async (req, res, next) => {
     }
 
     // Check ownership
-    if (internship.createdBy.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (internship.createdBy.toString() !== req.user.id && req.user.role !== ROLES.ADMIN) {
         return next(new ErrorResponse(`User ${req.user.id} is not authorized to update this internship`, 401));
     }
 
@@ -131,7 +132,7 @@ exports.applyForInternship = asyncHandler(async (req, res, next) => {
     }
 
     // Verify role
-    if (req.user.role !== 'student') {
+    if (req.user.role !== ROLES.STUDENT) {
         return next(new ErrorResponse(`User role ${req.user.role} is not authorized to apply`, 403));
     }
 
@@ -170,7 +171,7 @@ exports.getInternshipApplications = asyncHandler(async (req, res, next) => {
     }
 
     // Verify ownership
-    if (internship.createdBy.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (internship.createdBy.toString() !== req.user.id && req.user.role !== ROLES.ADMIN) {
         return next(new ErrorResponse(`Not authorized to view applications for this internship`, 401));
     }
 
@@ -197,7 +198,7 @@ exports.updateApplicationStatus = asyncHandler(async (req, res, next) => {
     }
 
     // Verify ownership of the *internship* associated with this application
-    if (application.internship.createdBy.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (application.internship.createdBy.toString() !== req.user.id && req.user.role !== ROLES.ADMIN) {
         return next(new ErrorResponse(`Not authorized to update this application`, 401));
     }
 

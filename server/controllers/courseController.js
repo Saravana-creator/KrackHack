@@ -2,6 +2,7 @@ const Course = require('../models/Course');
 const Resource = require('../models/Resource');
 const ErrorResponse = require('../utils/errorResponse');
 const asyncHandler = require('express-async-handler');
+const ROLES = require('../constants/roles');
 
 // @desc      Get all courses
 // @route     GET /api/v1/courses
@@ -67,7 +68,7 @@ exports.updateCourse = asyncHandler(async (req, res, next) => {
     }
 
     // Make sure user is course owner
-    if (course.faculty.toString() !== req.user.id && req.user.role !== 'admin' && req.user.role !== 'authority') {
+    if (course.faculty.toString() !== req.user.id && req.user.role !== ROLES.ADMIN && req.user.role !== ROLES.AUTHORITY) {
         return next(new ErrorResponse(`User ${req.user.id} is not authorized to update this course`, 401));
     }
 
@@ -93,7 +94,7 @@ exports.deleteCourse = asyncHandler(async (req, res, next) => {
     }
 
     // Make sure user is course owner
-    if (course.faculty.toString() !== req.user.id && req.user.role !== 'admin' && req.user.role !== 'authority') {
+    if (course.faculty.toString() !== req.user.id && req.user.role !== ROLES.ADMIN && req.user.role !== ROLES.AUTHORITY) {
         return next(new ErrorResponse(`User ${req.user.id} is not authorized to delete this course`, 401));
     }
 

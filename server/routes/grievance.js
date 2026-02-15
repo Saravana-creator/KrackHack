@@ -9,6 +9,7 @@ const {
 const router = express.Router({ mergeParams: true });
 
 const { protect, authorize } = require("../middleware/auth");
+const ROLES = require('../constants/roles');
 
 const multer = require("multer");
 
@@ -18,12 +19,12 @@ const upload = multer({ storage: storage });
 
 router
   .route("/")
-  .get(protect, authorize("student", "admin", "authority"), getGrievances)
-  .post(protect, authorize("student"), upload.single("image"), createGrievance);
+  .get(protect, authorize(ROLES.STUDENT, ROLES.ADMIN, ROLES.AUTHORITY), getGrievances)
+  .post(protect, authorize(ROLES.STUDENT), upload.single("image"), createGrievance);
 
 router
   .route("/:id")
   .get(protect, getGrievance)
-  .put(protect, authorize("student", "admin", "authority"), updateGrievance);
+  .put(protect, authorize(ROLES.STUDENT, ROLES.ADMIN, ROLES.AUTHORITY), updateGrievance);
 
 module.exports = router;

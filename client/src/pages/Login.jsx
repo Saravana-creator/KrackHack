@@ -2,12 +2,16 @@ import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { login } from '../redux/authSlice';
 import { useNavigate } from 'react-router-dom';
-import { Box, TextField, Button, Typography, Paper, Alert } from '@mui/material';
+import { Box, TextField, Button, Typography, Paper, Alert, IconButton, InputAdornment } from '@mui/material';
 import { motion } from 'framer-motion';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    
+    const handleClickShowPassword = () => setShowPassword(!showPassword);
     const { isLoading, error } = useSelector((state) => state.auth);
     const dispatch = useDispatch();
     const navigate = useNavigate();
@@ -65,13 +69,27 @@ const Login = () => {
                     <TextField
                         fullWidth
                         label="Password"
-                        type="password"
+                        type={showPassword ? 'text' : 'password'}
                         margin="normal"
                         variant="outlined"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
-                        InputProps={{ style: { color: 'white' } }}
+                        InputProps={{ 
+                            style: { color: 'white' },
+                            endAdornment: (
+                                <InputAdornment position="end">
+                                    <IconButton
+                                        aria-label="toggle password visibility"
+                                        onClick={handleClickShowPassword}
+                                        edge="end"
+                                        sx={{ color: '#94a3b8' }}
+                                    >
+                                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                                    </IconButton>
+                                </InputAdornment>
+                            )
+                        }}
                         InputLabelProps={{ style: { color: '#94a3b8' } }}
                         sx={{ input: { color: 'white' }, '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: '#475569' }, '&:hover fieldset': { borderColor: '#3b82f6' } } }}
                     />

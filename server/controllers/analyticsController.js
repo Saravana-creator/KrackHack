@@ -2,6 +2,7 @@ const asyncHandler = require('express-async-handler');
 const User = require('../models/User');
 const Grievance = require('../models/Grievance');
 const Internship = require('../models/Internship');
+const ROLES = require('../constants/roles');
 
 // @desc    Get system analytics (Department-wise)
 // @route   GET /api/v1/analytics
@@ -15,10 +16,10 @@ exports.getSystemAnalytics = asyncHandler(async (req, res, next) => {
                 _id: '$department',
                 count: { $sum: 1 },
                 students: {
-                    $sum: { $cond: [{ $eq: ['$role', 'student'] }, 1, 0] }
+                    $sum: { $cond: [{ $eq: ['$role', ROLES.STUDENT] }, 1, 0] }
                 },
                 faculty: {
-                    $sum: { $cond: [{ $eq: ['$role', 'faculty'] }, 1, 0] }
+                    $sum: { $cond: [{ $eq: ['$role', ROLES.FACULTY] }, 1, 0] }
                 }
             }
         },

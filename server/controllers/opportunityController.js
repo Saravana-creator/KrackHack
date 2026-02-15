@@ -2,6 +2,7 @@ const Opportunity = require("../models/Opportunity");
 const Application = require("../models/Application");
 const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("express-async-handler");
+const ROLES = require('../constants/roles');
 
 // @desc      Get all opportunities (filtered)
 // @route     GET /api/v1/opportunities
@@ -100,9 +101,9 @@ exports.createOpportunity = asyncHandler(async (req, res, next) => {
 
   // Check role
   if (
-    req.user.role !== "faculty" &&
-    req.user.role !== "admin" &&
-    req.user.role !== "authority"
+    req.user.role !== ROLES.FACULTY &&
+    req.user.role !== ROLES.ADMIN &&
+    req.user.role !== ROLES.AUTHORITY
   ) {
     return next(
       new ErrorResponse(
@@ -135,7 +136,7 @@ exports.updateOpportunity = asyncHandler(async (req, res, next) => {
   // Check ownership
   if (
     opportunity.postedBy.toString() !== req.user.id &&
-    req.user.role !== "admin"
+    req.user.role !== ROLES.ADMIN
   ) {
     return next(
       new ErrorResponse(
@@ -171,7 +172,7 @@ exports.deleteOpportunity = asyncHandler(async (req, res, next) => {
   // Check ownership
   if (
     opportunity.postedBy.toString() !== req.user.id &&
-    req.user.role !== "admin"
+    req.user.role !== ROLES.ADMIN
   ) {
     return next(
       new ErrorResponse(
@@ -186,6 +187,19 @@ exports.deleteOpportunity = asyncHandler(async (req, res, next) => {
   res.status(200).json({
     success: true,
     data: {},
+  });
+});
+
+// @desc      Get opportunities posted by the logged-in faculty
+// @route     GET /api/v1/opportunities/mine
+// @access    Private (Faculty)
+exports.getMyOpportunities = asyncHandler(async (req, res, next) => {
+  const opportunities = await Opportunity.find({ postedBy: req.user.id });
+
+  res.status(200).json({
+    success: true,
+    count: opportunities.length,
+    data: opportunities,
   });
 });
 
@@ -204,7 +218,7 @@ exports.applyForOpportunity = asyncHandler(async (req, res, next) => {
   }
 
   // Verify role
-  if (req.user.role !== "student") {
+  if (req.user.role !== ROLES.STUDENT) {
     return next(
       new ErrorResponse(
         `User role ${req.user.role} is not authorized to apply`,
@@ -260,7 +274,7 @@ exports.getOpportunityApplications = asyncHandler(async (req, res, next) => {
   // Verify ownership
   if (
     opportunity.postedBy.toString() !== req.user.id &&
-    req.user.role !== "admin"
+    req.user.role !== ROLES.ADMIN
   ) {
     return next(
       new ErrorResponse(
@@ -312,7 +326,7 @@ exports.updateApplicationStatus = asyncHandler(async (req, res, next) => {
   // Verify ownership of the *opportunity* associated with this application
   if (
     application.opportunity.postedBy.toString() !== req.user.id &&
-    req.user.role !== "admin"
+    req.user.role !== ROLES.ADMIN
   ) {
     return next(
       new ErrorResponse(`Not authorized to update this application`, 401),

@@ -2,6 +2,7 @@ const ErrorResponse = require('../utils/errorResponse');
 const asyncHandler = require('express-async-handler');
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const ROLES = require('../constants/roles');
 
 // @desc      Register user
 // @route     POST /api/v1/auth/register
@@ -48,7 +49,7 @@ exports.register = asyncHandler(async (req, res, next) => {
     let finalRole = role;
 
     // 1. Check if user is trying to be admin directly
-    if (role === 'admin') {
+    if (role === ROLES.ADMIN) {
         // Must use admin domain
         if (!email.endsWith('@admin.com')) {
             return next(new ErrorResponse('Admin role restricted to @admin.com domain', 403));
@@ -57,11 +58,11 @@ exports.register = asyncHandler(async (req, res, next) => {
 
     // 2. Check if email is admin domain -> Force role to admin
     if (email.endsWith('@admin.com')) {
-        finalRole = 'admin';
+        finalRole = ROLES.ADMIN;
     }
 
     // 3. Validation for privileges
-    if (finalRole === 'admin' || finalRole === 'authority' || finalRole === 'faculty') {
+    if (finalRole === ROLES.ADMIN || finalRole === ROLES.AUTHORITY || finalRole === ROLES.FACULTY) {
         const { secretKey } = req.body;
         const ADMIN_SECRET = process.env.ADMIN_SECRET || 'AEGIS_ADMIN_SECRET_2024';
         if (!secretKey || secretKey !== ADMIN_SECRET) {

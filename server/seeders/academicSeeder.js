@@ -50,6 +50,12 @@ const seed = async (facultyUser) => {
       console.log(`Created Course: ${c.title}`);
     } else {
       courseId = exists._id;
+      // Ensure faculty is set correctly even if it exists
+      if (exists.faculty.toString() !== facultyUser._id.toString()) {
+          exists.faculty = facultyUser._id;
+          await exists.save();
+          console.log(`Updated Faculty for: ${c.title}`);
+      }
       console.log(`Skipped (Exists): ${c.title}`);
     }
 

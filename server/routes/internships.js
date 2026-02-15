@@ -14,27 +14,28 @@ const {
 const router = express.Router();
 
 const { protect, authorize } = require('../middleware/auth');
+const ROLES = require('../constants/roles');
 
 // Public route for internships - Everyone can see
 router
     .route('/')
     .get(getInternships)
-    .post(protect, authorize('faculty', 'admin', 'authority'), createInternship);
+    .post(protect, authorize(ROLES.FACULTY, ROLES.ADMIN, ROLES.AUTHORITY), createInternship);
 
 router
     .route('/:id')
     .get(getInternship)
-    .put(protect, authorize('faculty', 'admin', 'authority'), updateInternship)
-    .delete(protect, authorize('faculty', 'admin', 'authority'), deleteInternship);
+    .put(protect, authorize(ROLES.FACULTY, ROLES.ADMIN, ROLES.AUTHORITY), updateInternship)
+    .delete(protect, authorize(ROLES.FACULTY, ROLES.ADMIN, ROLES.AUTHORITY), deleteInternship);
 
 // Application routes
 router
     .route('/:id/apply')
-    .post(protect, authorize('student'), applyForInternship);
+    .post(protect, authorize(ROLES.STUDENT), applyForInternship);
 
 router
     .route('/:id/applications')
-    .get(protect, authorize('faculty', 'admin', 'authority'), getInternshipApplications);
+    .get(protect, authorize(ROLES.FACULTY, ROLES.ADMIN, ROLES.AUTHORITY), getInternshipApplications);
 
 // Status updates and my applications
 // Note: These might be better served under a separate /applications resource, but for simplicity here:
