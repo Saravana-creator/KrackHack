@@ -33,12 +33,33 @@ exports.getGrievances = asyncHandler(async (req, res, next) => {
     .json({ success: true, count: grievances.length, data: grievances });
 });
 
+const cloudinary = require("../config/cloudinary");
+const { Readable } = require("stream");
+
 // @desc      Create a grievance (Student only)
 // @route     POST /api/v1/grievances
 // @access    Private (Student)
 exports.createGrievance = asyncHandler(async (req, res, next) => {
+  console.log("Create Grievance Body:", req.body);
+  console.log("Create Grievance File:", req.file);
+
   // Add user to req.body
   req.body.user = req.user.id;
+
+  // Initialize timeline
+  req.body.timeline = [
+    {
+      status: "Submitted",
+      date: Date.now(),
+      comment: "Grievance submitted",
+      updatedBy: req.user.id,
+    },
+  ];
+
+  // Prevent CastError if image field comes in as object
+  if (req.body.image) {
+    delete req.body.image;
+  }
 
   // Check if user is a student
   if (req.user.role !== "student") {
@@ -50,6 +71,39 @@ exports.createGrievance = asyncHandler(async (req, res, next) => {
     );
   }
 
+  // Handle image upload if file exists
+  if (req.file) {
+    try {
+      const uploadStream = (buffer) => {
+        return new Promise((resolve, reject) => {
+          const upload_stream = cloudinary.uploader.upload_stream(
+            { folder: "grievances" },
+            (error, result) => {
+              if (error) {
+                console.error("Cloudinary upload error:", error);
+                return reject(error);
+              }
+              resolve(result);
+            },
+          );
+          const stream = Readable.from(buffer);
+          stream.pipe(upload_stream);
+        });
+      };
+
+      const result = await uploadStream(req.file.buffer);
+      console.log("Cloudinary Upload Result:", result);
+
+      if (result && result.secure_url) {
+        req.body.image = result.secure_url;
+      }
+    } catch (error) {
+      console.error("Image upload exception:", error);
+      return next(new ErrorResponse("Image upload failed", 500));
+    }
+  }
+
+  console.log("Creating grievance with body:", req.body);
   const grievance = await Grievance.create(req.body);
 
   // Notify Admins and Authorities
@@ -106,6 +160,9 @@ exports.getGrievance = asyncHandler(async (req, res, next) => {
 // @desc      Update grievance status
 // @route     PUT /api/v1/grievances/:id
 // @access    Private (Admin, Authority)
+// @desc      Update grievance status, assign authority, add remarks
+// @route     PUT /api/v1/grievances/:id
+// @access    Private (Admin, Authority, Student(limited))
 exports.updateGrievance = asyncHandler(async (req, res, next) => {
   let grievance = await Grievance.findById(req.params.id);
 
@@ -118,7 +175,7 @@ exports.updateGrievance = asyncHandler(async (req, res, next) => {
     );
   }
 
-  // Check ownership
+  // Check ownership/permissions
   if (
     req.user.role === "student" &&
     grievance.user.toString() !== req.user.id
@@ -131,22 +188,104 @@ exports.updateGrievance = asyncHandler(async (req, res, next) => {
     );
   }
 
+  // Student Restrictions
   if (req.user.role === "student") {
-    // Students can only update category or title, NOT status
-    delete req.body.status;
-    delete req.body.assignedTo;
+    // Students can only update title, description, category
+    // Cannot update status, assignedTo, remarks, timeline
+    if (req.body.status || req.body.assignedTo || req.body.remarks) {
+      return next(
+        new ErrorResponse(
+          "Students cannot update status, assignment or remarks",
+          403,
+        ),
+      );
+    }
   }
 
-  grievance = await Grievance.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  });
+  // Timeline Logic for Admin/Authority
+  if (req.user.role === "admin" || req.user.role === "authority") {
+    let timelineComment = "";
+    let shouldPush = false;
+    let pushData = null;
+
+    // Check Status Change
+    if (req.body.status && req.body.status !== grievance.status) {
+      timelineComment = `Status updated to ${req.body.status}`;
+      shouldPush = true;
+    }
+
+    // Check Assignment Change
+    const currentAssignedTo = grievance.assignedTo
+      ? grievance.assignedTo.toString()
+      : null;
+    if (req.body.assignedTo && req.body.assignedTo !== currentAssignedTo) {
+      const assignMsg = `Assigned to user ${req.body.assignedTo}`;
+      timelineComment = timelineComment
+        ? `${timelineComment}. ${assignMsg}`
+        : assignMsg;
+      shouldPush = true;
+    }
+
+    // Force push if explicit remarks, even without status change
+    if (req.body.remarks && !shouldPush) {
+      timelineComment = req.body.remarks;
+      shouldPush = true;
+    } else if (req.body.remarks && shouldPush) {
+      timelineComment = `${timelineComment}. Remarks: ${req.body.remarks}`;
+    }
+
+    if (shouldPush) {
+      // Must use atomic operators for everything since we are using $push
+      const updateObject = {
+        $set: { ...req.body }, // Update standard fields
+        $push: {
+          timeline: {
+            status: req.body.status || grievance.status,
+            updatedBy: req.user.id,
+            date: Date.now(),
+            comment: timelineComment,
+          },
+        },
+      };
+
+      grievance = await Grievance.findByIdAndUpdate(
+        req.params.id,
+        updateObject,
+        {
+          new: true,
+          runValidators: true,
+        },
+      );
+    } else {
+      // Standard update using req.body (Mongoose handles default $set)
+      grievance = await Grievance.findByIdAndUpdate(req.params.id, req.body, {
+        new: true,
+        runValidators: true,
+      });
+    }
+  } else {
+    // Fallback for Students (or if role check changes) - standard update
+    grievance = await Grievance.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+  }
+
+  // If populating timeline in the response is needed, do another find or just return basic
+  // But usually we want to see the updated doc.
+  // Note: findByIdAndUpdate with req.body containing $push and other fields might need separate handling
+  // if req.body has both '$push' and flattened fields.
+  // Mongoose `findByIdAndUpdate` can accept query operators directly.
+  // However, req.body might contain 'status': 'Resolved'.
+  // Mixing $push and regular keys in update object works fine in Mongoose.
 
   // Notify the user who submitted the grievance
-  req.io.to(grievance.user.toString()).emit("notification", {
-    message: `Your grievance status has been updated to ${grievance.status}`,
-    grievance,
-  });
+  if (req.body.status) {
+    req.io.to(grievance.user.toString()).emit("notification", {
+      message: `Your grievance status has been updated to ${grievance.status}`,
+      grievance,
+    });
+  }
 
   res.status(200).json({
     success: true,

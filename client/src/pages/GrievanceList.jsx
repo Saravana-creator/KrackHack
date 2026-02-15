@@ -329,6 +329,42 @@ const GrievanceList = () => {
             </Typography>
           </Box>
 
+          {selectedGrievance?.image && (
+            <Box mb={3}>
+              <Typography variant="subtitle2" color="text.secondary">
+                ATTACHMENT
+              </Typography>
+              <Box
+                component="img"
+                src={selectedGrievance.image}
+                alt="Grievance Attachment"
+                sx={{
+                  width: "100%",
+                  maxHeight: 300,
+                  objectFit: "contain",
+                  borderRadius: 1,
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  mt: 1,
+                }}
+              />
+            </Box>
+          )}
+          {!selectedGrievance?.image && (
+            <Box
+              mb={3}
+              sx={{
+                p: 2,
+                border: "1px dashed rgba(255,255,255,0.2)",
+                borderRadius: 1,
+                textAlign: "center",
+              }}
+            >
+              <Typography variant="body2" color="text.secondary">
+                No Attachment
+              </Typography>
+            </Box>
+          )}
+
           {user.role === "admin" || user.role === "authority" ? (
             <Box>
               <Typography variant="subtitle2" color="text.secondary" mb={1}>

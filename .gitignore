@@ -91,3 +91,11 @@ public
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Build Output
+dist
+build
+.vite
+
+# Ensure .env is NOT ignored (per user request)
+# .env
