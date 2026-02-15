@@ -107,7 +107,7 @@ exports.deleteInternship = asyncHandler(async (req, res, next) => {
     }
 
     // Check ownership
-    if (internship.createdBy.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (internship.createdBy.toString() !== req.user.id && req.user.role !== ROLES.ADMIN) {
         return next(new ErrorResponse(`User ${req.user.id} is not authorized to delete this internship`, 401));
     }
 
@@ -187,47 +187,4 @@ exports.getInternshipApplications = asyncHandler(async (req, res, next) => {
     });
 });
 
-// @desc      Update Application Status (Creator/Admin)
-// @route     PUT /api/v1/applications/:id
-// @access    Private (Creator/Admin)
-exports.updateApplicationStatus = asyncHandler(async (req, res, next) => {
-    let application = await Application.findById(req.params.id).populate('internship');
 
-    if (!application) {
-        return next(new ErrorResponse(`No application found with id ${req.params.id}`, 404));
-    }
-
-    // Verify ownership of the *internship* associated with this application
-    if (application.internship.createdBy.toString() !== req.user.id && req.user.role !== ROLES.ADMIN) {
-        return next(new ErrorResponse(`Not authorized to update this application`, 401));
-    }
-
-    application = await Application.findByIdAndUpdate(req.params.id, { status: req.body.status }, {
-        new: true,
-        runValidators: true
-    });
-
-    // Notify Student
-    req.io.to(application.student.toString()).emit('notification', {
-        message: `Your application status for ${application.internship.title} has been updated to ${req.body.status}`,
-        applicationId: application._id
-    });
-
-    res.status(200).json({
-        success: true,
-        data: application
-    });
-});
-
-// @desc      Get My Applications (Student)
-// @route     GET /api/v1/applications/me
-// @access    Private (Student)
-exports.getMyApplications = asyncHandler(async (req, res, next) => {
-    const applications = await Application.find({ student: req.user.id }).populate('internship');
-
-    res.status(200).json({
-        success: true,
-        count: applications.length,
-        data: applications
-    });
-});

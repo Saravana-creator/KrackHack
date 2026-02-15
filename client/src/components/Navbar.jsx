@@ -22,6 +22,7 @@ const Navbar = () => {
   );
   const dispatch = useDispatch();
   const location = useLocation();
+  const navigate = useNavigate();
   const isPublicRoute = ["/", "/login", "/register"].includes(
     location.pathname,
   );

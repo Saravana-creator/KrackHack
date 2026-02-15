@@ -1,6 +1,7 @@
 const ErrorResponse = require('../utils/errorResponse');
 const asyncHandler = require('express-async-handler');
 const User = require('../models/User');
+const AllowedDomain = require('../models/AllowedDomain');
 const jwt = require('jsonwebtoken');
 const ROLES = require('../constants/roles');
 
@@ -10,10 +11,7 @@ const ROLES = require('../constants/roles');
 exports.register = asyncHandler(async (req, res, next) => {
     const { name, email, password, role, department } = req.body;
 
-    const AllowedDomain = require('../models/AllowedDomain'); // Make sure to require this at the top, I will handle it in the string here for context but in real code it should be top level. 
-    // Wait, I cannot add require inside the function cleanly if I replace a chunk. I should replace the file content more broadly or add the require at the top.
-
-    // Let's do the password check first.
+    // Password validation
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     if (!passwordRegex.test(password)) {
         return next(new ErrorResponse('Password must be at least 8 characters long, contain uppercase, lowercase, number, and special character.', 400));
@@ -21,6 +19,7 @@ exports.register = asyncHandler(async (req, res, next) => {
 
     // Dynamic Domain Validation
     const allowedDomainsDocs = await AllowedDomain.find({});
+    // Extract domain strings from documents
     const allowedDomains = allowedDomainsDocs.map(d => d.domain);
 
     // Default allowed if list is empty, or add to list
@@ -29,16 +28,14 @@ exports.register = asyncHandler(async (req, res, next) => {
     }
 
     // Always allow admin domain
-    allowedDomains.push('@admin.com');
+    allowedDomains.push('admin.com');
 
     const isValidDomain = allowedDomains.some(domain => {
         // If domain is '.edu', email must end with '.edu'
         if (domain.startsWith('.')) return email.endsWith(domain);
-        // If domain is '@admin.com', email must end with '@admin.com'
-        if (domain.startsWith('@')) return email.endsWith(domain);
-        // If domain is 'gmail.com', email must end with '@gmail.com' or '.gmail.com' (subdomain)
-        // But strictest is '@' + domain
-        return email.endsWith(`@${domain}`) || email.endsWith(`.${domain}`);
+
+        // precise matching for domains like 'admin.com' -> '@admin.com'
+        return email.endsWith(`@${domain}`);
     });
 
     if (!isValidDomain) {
@@ -64,7 +61,13 @@ exports.register = asyncHandler(async (req, res, next) => {
     // 3. Validation for privileges
     if (finalRole === ROLES.ADMIN || finalRole === ROLES.AUTHORITY || finalRole === ROLES.FACULTY) {
         const { secretKey } = req.body;
-        const ADMIN_SECRET = process.env.ADMIN_SECRET || 'AEGIS_ADMIN_SECRET_2024';
+        const ADMIN_SECRET = process.env.ADMIN_SECRET;
+
+        if (!ADMIN_SECRET) {
+            console.error("ADMIN_SECRET is not defined in environment variables");
+            return next(new ErrorResponse('Server configuration error', 500));
+        }
+
         if (!secretKey || secretKey !== ADMIN_SECRET) {
             return next(new ErrorResponse('Invalid Secret Key for privileged registration', 403));
         }
@@ -109,8 +112,13 @@ exports.login = asyncHandler(async (req, res, next) => {
         return next(new ErrorResponse('Invalid credentials', 401));
     }
 
+    if (!process.env.JWT_SECRET) {
+        console.error("JWT_SECRET is not defined in environment variables");
+        return next(new ErrorResponse('Server configuration error', 500));
+    }
+
     // Create token
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET || 'AEGIS_PROTOCOL_SECRET', { expiresIn: '30d' });
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRE || '30d' });
 
     res.status(200).json({ success: true, token });
 });

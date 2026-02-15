@@ -82,7 +82,6 @@ function App() {
             <CssBaseline />
             <Cursor />
             <Toaster position="top-right" />
-            <Toaster position="top-right" />
 
             <AnimatePresence mode="wait">
                 <Routes>
@@ -101,7 +100,7 @@ function App() {
                             <Route path="/admin/domains" element={<AdminDomains />} />
                             <Route path="/careers" element={<Opportunities />} />
                             <Route path="/lost-found" element={<LostFound />} />
-                            
+
                             {/* Faculty Routes */}
                             <Route path="/faculty/opportunities" element={<FacultyOpportunities />} />
                             <Route path="/faculty/applications/:id" element={<FacultyApplications />} />

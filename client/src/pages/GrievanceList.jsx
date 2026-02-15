@@ -90,12 +90,16 @@ const GrievanceList = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "open":
-        return "error";
-      case "in-progress":
+      case "Submitted":
+        return "info";
+      case "Under Review":
         return "warning";
-      case "resolved":
+      case "In Progress":
+        return "primary";
+      case "Resolved":
         return "success";
+      case "Rejected":
+        return "error";
       default:
         return "default";
     }
@@ -189,6 +193,9 @@ const GrievanceList = () => {
                   CATEGORY
                 </TableCell>
                 <TableCell sx={{ fontWeight: "bold", color: "text.secondary" }}>
+                  PRIORITY
+                </TableCell>
+                <TableCell sx={{ fontWeight: "bold", color: "text.secondary" }}>
                   DATE SUBMITTED
                 </TableCell>
                 <TableCell sx={{ fontWeight: "bold", color: "text.secondary" }}>
@@ -233,12 +240,19 @@ const GrievanceList = () => {
                       }}
                     />
                   </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={row.priority || "Medium"}
+                      size="small"
+                      color={row.priority === "Urgent" || row.priority === "High" ? "error" : "default"}
+                    />
+                  </TableCell>
                   <TableCell sx={{ color: "text.secondary" }}>
                     {new Date(row.createdAt).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
                     <Chip
-                      label={row.status.toUpperCase().replace("-", " ")}
+                      label={row.status}
                       color={getStatusColor(row.status)}
                       size="small"
                       sx={{ fontWeight: "bold" }}
@@ -271,7 +285,7 @@ const GrievanceList = () => {
               {grievances.length === 0 && (
                 <TableRow>
                   <TableCell
-                    colSpan={6}
+                    colSpan={7}
                     align="center"
                     sx={{ py: 4, color: "text.secondary" }}
                   >
@@ -329,6 +343,24 @@ const GrievanceList = () => {
             </Typography>
           </Box>
 
+          <Box mb={3}>
+            <Typography variant="subtitle2" color="text.secondary">
+              PRIORITY
+            </Typography>
+            <Chip label={selectedGrievance?.priority || "Medium"} size="small" />
+          </Box>
+
+          {selectedGrievance?.location && (
+            <Box mb={3}>
+              <Typography variant="subtitle2" color="text.secondary">
+                LOCATION
+              </Typography>
+              <Typography variant="body1" color="text.primary">
+                {selectedGrievance.location}
+              </Typography>
+            </Box>
+          )}
+
           {selectedGrievance?.image ? (
             <Box mb={3}>
               <Typography variant="subtitle2" color="text.secondary">
@@ -382,9 +414,11 @@ const GrievanceList = () => {
                   },
                 }}
               >
-                <MenuItem value="open">Open</MenuItem>
-                <MenuItem value="in-progress">In Progress</MenuItem>
-                <MenuItem value="resolved">Resolved</MenuItem>
+                <MenuItem value="Submitted">Submitted</MenuItem>
+                <MenuItem value="Under Review">Under Review</MenuItem>
+                <MenuItem value="In Progress">In Progress</MenuItem>
+                <MenuItem value="Resolved">Resolved</MenuItem>
+                <MenuItem value="Rejected">Rejected</MenuItem>
               </Select>
             </Box>
           ) : (
@@ -393,7 +427,7 @@ const GrievanceList = () => {
                 CURRENT STATUS
               </Typography>
               <Chip
-                label={selectedGrievance?.status.toUpperCase()}
+                label={selectedGrievance?.status}
                 color={getStatusColor(selectedGrievance?.status)}
               />
             </Box>

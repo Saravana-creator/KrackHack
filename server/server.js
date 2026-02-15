@@ -10,6 +10,14 @@ const errorHandler = require("./middleware/error");
 // Load env vars
 dotenv.config();
 
+// Check for critical environment variables
+if (!process.env.MONGO_URI || !process.env.JWT_SECRET || !process.env.ADMIN_SECRET) {
+  console.error(
+    "FATAL ERROR: One or more critical environment variables (MONGO_URI, JWT_SECRET, ADMIN_SECRET) are missing.",
+  );
+  process.exit(1);
+}
+
 // Connect to database
 connectDB();
 

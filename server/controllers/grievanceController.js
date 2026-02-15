@@ -13,9 +13,20 @@ exports.getGrievances = asyncHandler(async (req, res, next) => {
   let grievances;
 
   if (req.user.role === ROLES.ADMIN || req.user.role === ROLES.AUTHORITY) {
-    grievances = await Grievance.find()
+    const rawGrievances = await Grievance.find()
       .populate("user", "username email department")
       .populate("assignedTo", "username email");
+
+    // Apply anonymity mask
+    grievances = rawGrievances.map((g) => {
+      const doc = g.toObject();
+      if (doc.isAnonymous && doc.user) {
+        doc.user.username = "Anonymous Student";
+        doc.user.email = "Hidden";
+        doc.user.department = "Hidden";
+      }
+      return doc;
+    });
   } else if (req.user.role === ROLES.STUDENT) {
     grievances = await Grievance.find({ user: req.user.id }).populate(
       "assignedTo",
@@ -153,9 +164,22 @@ exports.getGrievance = asyncHandler(async (req, res, next) => {
     );
   }
 
+  // Masking for Anonymity
+  let responseData = grievance.toObject();
+  if (responseData.isAnonymous) {
+    // If viewer is NOT the owner (e.g. Admin/Authority), hide details
+    if (req.user.id !== responseData.user._id.toString()) {
+      if (responseData.user) {
+        responseData.user.username = "Anonymous Student";
+        responseData.user.email = "Hidden";
+        responseData.user.department = "Hidden";
+      }
+    }
+  }
+
   res.status(200).json({
     success: true,
-    data: grievance,
+    data: responseData,
   });
 });
 

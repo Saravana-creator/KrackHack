@@ -9,14 +9,21 @@ import {
   Typography,
   MenuItem,
   Paper,
+  Checkbox,
+  FormControlLabel,
 } from "@mui/material";
 import api from "../services/api";
 import { motion } from "framer-motion";
+
+// ... (imports remain same)
 
 const GrievanceForm = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
+  const [priority, setPriority] = useState("Medium");
+  const [location, setLocation] = useState("");
+  const [isAnonymous, setIsAnonymous] = useState(false);
   const [image, setImage] = useState(null);
   const navigate = useNavigate();
 
@@ -26,14 +33,18 @@ const GrievanceForm = () => {
     formData.append("title", title);
     formData.append("description", description);
     formData.append("category", category);
+    formData.append("priority", priority);
+    formData.append("location", location);
+    formData.append("isAnonymous", isAnonymous);
     if (image) {
       formData.append("image", image);
     }
+    // ...
 
     try {
       await api.post("/grievances", formData);
       toast.success("Grievance submitted successfully");
-      navigate("/dashboard");
+      navigate("/grievances"); // Navigate to list after submission
     } catch (error) {
       console.error(error);
       toast.error(error.response?.data?.error || "Failed to submit grievance");
@@ -110,8 +121,60 @@ const GrievanceForm = () => {
             <MenuItem value="financial">Financial</MenuItem>
             <MenuItem value="harassment">Harassment</MenuItem>
             <MenuItem value="infrastructure">Infrastructure</MenuItem>
+            <MenuItem value="hostel">Hostel</MenuItem>
+            <MenuItem value="food">Food</MenuItem>
             <MenuItem value="other">Other</MenuItem>
           </TextField>
+
+          <TextField
+            select
+            fullWidth
+            label="Priority"
+            margin="normal"
+            value={priority}
+            onChange={(e) => setPriority(e.target.value)}
+            required
+            variant="outlined"
+            InputProps={{ style: { color: "white" } }}
+            InputLabelProps={{ style: { color: "#94a3b8" } }}
+          >
+            <MenuItem value="Low">Low</MenuItem>
+            <MenuItem value="Medium">Medium</MenuItem>
+            <MenuItem value="High">High</MenuItem>
+            <MenuItem value="Urgent">Urgent</MenuItem>
+          </TextField>
+
+          <TextField
+            fullWidth
+            label="Location (Optional)"
+            margin="normal"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            variant="outlined"
+            InputProps={{ style: { color: "white" } }}
+            InputLabelProps={{ style: { color: "#94a3b8" } }}
+          />
+
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={isAnonymous}
+                onChange={(e) => setIsAnonymous(e.target.checked)}
+                sx={{
+                  color: "#94a3b8",
+                  "&.Mui-checked": {
+                    color: "#3b82f6",
+                  },
+                }}
+              />
+            }
+            label={
+              <Typography color="text.secondary">
+                Submit Anonymously (Hide your identity from authorities)
+              </Typography>
+            }
+            sx={{ mt: 1 }}
+          />
 
           <input
             accept="image/*"

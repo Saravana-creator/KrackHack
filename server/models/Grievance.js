@@ -13,18 +13,16 @@ const GrievanceSchema = new mongoose.Schema({
   category: {
     type: String,
     enum: [
-      "Infrastructure",
-      "Academics",
-      "Hostel",
-      "Food",
-      "Other",
-      "academic",
+      "infrastructure",
+      "academics",
+      "hostel",
+      "food",
+      "other",
       "financial",
       "harassment",
-      "infrastructure",
-      "other",
+      "academic"
     ],
-    default: "Other",
+    default: "other",
   },
   status: {
     type: String,
@@ -34,20 +32,20 @@ const GrievanceSchema = new mongoose.Schema({
       "In Progress",
       "Resolved",
       "Rejected",
-      "pending",
-      "in-progress",
-      "resolved",
-      "rejected",
     ],
     default: "Submitted",
   },
   priority: {
     type: String,
-    enum: ["Low", "Medium", "High", "Urgent", "low", "medium", "high"],
+    enum: ["Low", "Medium", "High", "Urgent"],
     default: "Medium",
   },
   location: {
     type: String,
+  },
+  isAnonymous: {
+    type: Boolean,
+    default: false,
   },
   image: {
     type: String,
