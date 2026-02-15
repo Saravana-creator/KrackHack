@@ -55,8 +55,10 @@ typings/
 .yarn-integrity
 
 # dotenv environment variables file
-# .env  <-- Intentionally commented out to include in repo
+.env
 .env.test
+.env.local
+.env.*
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -69,7 +71,7 @@ typings/
 
 # Gatsby files
 .cache/
-public
+# public <- Commented out to prevent ignoring client/public
 
 # Vuepress build output
 .vuepress/dist
@@ -97,5 +99,10 @@ dist
 build
 .vite
 
-# Ensure .env is NOT ignored (per user request)
-# .env
+# Seeders (User requested)
+seeders/
+server/seeders/
+
+# Uploads
+uploads/
+server/uploads/
