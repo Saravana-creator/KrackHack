@@ -51,6 +51,7 @@ const GrievanceSchema = new mongoose.Schema({
   },
   image: {
     type: String,
+    default: "",
   },
   user: {
     type: mongoose.Schema.ObjectId,

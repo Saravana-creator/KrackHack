@@ -96,6 +96,7 @@ exports.createGrievance = asyncHandler(async (req, res, next) => {
 
       if (result && result.secure_url) {
         req.body.image = result.secure_url;
+        console.log("Image uploaded successfully:", result.secure_url);
       }
     } catch (error) {
       console.error("Image upload exception:", error);

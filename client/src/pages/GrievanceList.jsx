@@ -329,27 +329,24 @@ const GrievanceList = () => {
             </Typography>
           </Box>
 
-          {selectedGrievance?.image && (
+          {selectedGrievance?.image ? (
             <Box mb={3}>
               <Typography variant="subtitle2" color="text.secondary">
                 ATTACHMENT
               </Typography>
-              <Box
-                component="img"
+              <img
                 src={selectedGrievance.image}
-                alt="Grievance Attachment"
-                sx={{
+                alt="Attachment"
+                style={{
                   width: "100%",
-                  maxHeight: 300,
+                  maxHeight: "300px",
                   objectFit: "contain",
-                  borderRadius: 1,
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  mt: 1,
+                  borderRadius: "8px",
+                  marginTop: "10px",
                 }}
               />
             </Box>
-          )}
-          {!selectedGrievance?.image && (
+          ) : (
             <Box
               mb={3}
               sx={{
