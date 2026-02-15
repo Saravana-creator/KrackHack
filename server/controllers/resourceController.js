@@ -2,7 +2,9 @@ const Resource = require("../models/Resource");
 const Course = require("../models/Course");
 const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("express-async-handler");
-const ROLES = require('../constants/roles');
+const ROLES = require("../constants/roles");
+const cloudinary = require("../config/cloudinary");
+const { Readable } = require("stream");
 
 // @desc      Get resources for a course
 // @route     GET /api/v1/courses/:courseId/resources
@@ -87,9 +89,45 @@ exports.addResource = asyncHandler(async (req, res, next) => {
     );
   }
 
+  // Handle File Upload
+  if (req.file) {
+    try {
+      const uploadStream = (buffer) => {
+        return new Promise((resolve, reject) => {
+          const upload_stream = cloudinary.uploader.upload_stream(
+            {
+              folder: "resources",
+              resource_type: "auto", // Auto-detect type (pdf, video, etc.)
+            },
+            (error, result) => {
+              if (error) return reject(error);
+              resolve(result);
+            },
+          );
+          const stream = Readable.from(buffer);
+          stream.pipe(upload_stream);
+        });
+      };
+
+      const result = await uploadStream(req.file.buffer);
+
+      if (result && result.secure_url) {
+        req.body.fileUrl = result.secure_url;
+        // Attempt to auto-set type if not provided or just rely on manual selection
+        // For simplicity, let's keep manual selection or default 'pdf' unless obvious
+        if (result.format === "pdf") req.body.type = "pdf";
+        else if (["mp4", "mov", "avi"].includes(result.format))
+          req.body.type = "video";
+      }
+    } catch (error) {
+      console.error("Resource upload failed", error);
+      return next(new ErrorResponse("File upload failed", 500));
+    }
+  }
+
   const resource = await Resource.create(req.body);
 
-  res.status(200).json({
+  res.status(201).json({
     success: true,
     data: resource,
   });

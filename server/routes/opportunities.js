@@ -1,53 +1,54 @@
-const express = require('express');
+const express = require("express");
 const {
-    getOpportunities,
-    getOpportunity,
-    createOpportunity,
-    updateOpportunity,
-    deleteOpportunity,
-    applyForOpportunity,
-    getOpportunityApplications,
-    updateApplicationStatus,
-    getMyApplications,
-    getMyOpportunities
-} = require('../controllers/opportunityController');
+  getOpportunities,
+  getOpportunity,
+  createOpportunity,
+  updateOpportunity,
+  deleteOpportunity,
+  getMyOpportunities,
+} = require("../controllers/opportunityController");
+
+const {
+  applyForOpportunity,
+  getOpportunityApplications,
+} = require("../controllers/applicationController");
 
 const router = express.Router();
 
-const { protect, authorize } = require('../middleware/auth');
-const ROLES = require('../constants/roles');
+const { protect, authorize } = require("../middleware/auth");
+const ROLES = require("../constants/roles");
 
 router.use(protect); // All routes are protected
 
 router
-    .route('/')
-    .get(getOpportunities)
-    .post(authorize(ROLES.FACULTY, ROLES.ADMIN, ROLES.AUTHORITY), createOpportunity);
+  .route("/")
+  .get(getOpportunities)
+  .post(
+    authorize(ROLES.FACULTY, ROLES.ADMIN, ROLES.AUTHORITY),
+    createOpportunity,
+  );
+
+router.route("/mine").get(authorize(ROLES.FACULTY), getMyOpportunities);
 
 router
-    .route('/applications/me')
-    .get(authorize(ROLES.STUDENT), getMyApplications);
+  .route("/:id")
+  .get(getOpportunity)
+  .put(
+    authorize(ROLES.FACULTY, ROLES.ADMIN, ROLES.AUTHORITY),
+    updateOpportunity,
+  )
+  .delete(
+    authorize(ROLES.FACULTY, ROLES.ADMIN, ROLES.AUTHORITY),
+    deleteOpportunity,
+  );
+
+router.route("/:id/apply").post(authorize(ROLES.STUDENT), applyForOpportunity);
 
 router
-    .route('/mine')
-    .get(authorize(ROLES.FACULTY), getMyOpportunities);
-
-router
-    .route('/:id')
-    .get(getOpportunity)
-    .put(authorize(ROLES.FACULTY, ROLES.ADMIN, ROLES.AUTHORITY), updateOpportunity)
-    .delete(authorize(ROLES.FACULTY, ROLES.ADMIN, ROLES.AUTHORITY), deleteOpportunity);
-
-router
-    .route('/:id/apply')
-    .post(authorize(ROLES.STUDENT), applyForOpportunity);
-
-router
-    .route('/:id/applications')
-    .get(authorize(ROLES.FACULTY, ROLES.ADMIN, ROLES.AUTHORITY), getOpportunityApplications);
-
-router
-    .route('/applications/:id/status')
-    .put(authorize(ROLES.FACULTY, ROLES.ADMIN, ROLES.AUTHORITY), updateApplicationStatus);
+  .route("/:id/applications")
+  .get(
+    authorize(ROLES.FACULTY, ROLES.ADMIN, ROLES.AUTHORITY),
+    getOpportunityApplications,
+  );
 
 module.exports = router;
