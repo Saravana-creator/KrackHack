@@ -25,6 +25,9 @@ const Sidebar = () => {
         if (user?.role === 'admin') {
             return item.text !== 'Academics' && item.text !== 'Careers';
         }
+        if (user?.role === 'authority') {
+            return item.text !== 'Academics';
+        }
         return true;
     });
 

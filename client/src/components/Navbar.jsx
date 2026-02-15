@@ -67,9 +67,11 @@ const Navbar = () => {
             <Button component={Link} to="/careers" color="inherit">
               Careers
             </Button>
-            <Button component={Link} to="/academics" color="inherit">
-              Academics
-            </Button>
+            {user?.role !== 'authority' && (
+              <Button component={Link} to="/academics" color="inherit">
+                Academics
+              </Button>
+            )}
             {!isPublicRoute && (
               <Button
                 component={Link}

@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import { motion } from "framer-motion";
 import io from "socket.io-client";
-import { FaClipboardList, FaSpinner, FaExclamationTriangle, FaCheckCircle } from "react-icons/fa";
+import { FaClipboardList, FaSpinner, FaExclamationTriangle, FaCheckCircle, FaSearchLocation } from "react-icons/fa";
 import api from "../../services/api";
 
 const AuthorityDashboard = () => {
@@ -37,7 +37,7 @@ const AuthorityDashboard = () => {
     socket.emit('join', user._id);
     
     socket.on('notification', notif => {
-      setNotifications((prev) => [data, ...prev]);
+      setNotifications((prev) => [notif, ...prev]);
     });
 
     return () => {
@@ -132,7 +132,7 @@ const AuthorityDashboard = () => {
                  </Card>
              </Grid>
              <Grid item xs={12} md={6}>
-                 <Card sx={{ bgcolor: "background.paper", border: "1px solid rgba(255,255,255,0.1)", cursor: 'pointer' }} onClick={() => navigate("/authority/lost-found")}>
+                 <Card sx={{ bgcolor: "background.paper", border: "1px solid rgba(255,255,255,0.1)", cursor: 'pointer' }} onClick={() => navigate("/lost-found")}>
                      <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                          <FaSearchLocation size={32} color="#f59e0b" />
                          <Box>
