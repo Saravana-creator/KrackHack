@@ -35,7 +35,7 @@ router
 
 router
   .route("/events")
-  .get(getEvents)
-  .post(authorize(ROLES.ADMIN, ROLES.AUTHORITY, ROLES.FACULTY), createEvent);
+  .get(authorize(ROLES.STUDENT, ROLES.FACULTY, ROLES.ADMIN), getEvents)
+  .post(authorize(ROLES.ADMIN, ROLES.FACULTY), createEvent);
 
 module.exports = router;

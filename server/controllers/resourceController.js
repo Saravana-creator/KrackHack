@@ -1,4 +1,6 @@
 const Resource = require("../models/Resource");
+const User = require("../models/User");
+const Notification = require("../models/Notification");
 const Course = require("../models/Course");
 const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("express-async-handler");
@@ -89,43 +91,44 @@ exports.addResource = asyncHandler(async (req, res, next) => {
     );
   }
 
-  // Handle File Upload
+  // Handle File Upload (Local)
   if (req.file) {
-    try {
-      const uploadStream = (buffer) => {
-        return new Promise((resolve, reject) => {
-          const upload_stream = cloudinary.uploader.upload_stream(
-            {
-              folder: "resources",
-              resource_type: "auto", // Auto-detect type (pdf, video, etc.)
-            },
-            (error, result) => {
-              if (error) return reject(error);
-              resolve(result);
-            },
-          );
-          const stream = Readable.from(buffer);
-          stream.pipe(upload_stream);
-        });
-      };
+    // req.file is available due to multer diskStorage
+    // It has: path, filename, originalname, mimetype, size
+    
+    // Construct local file URL - or better yet, just the path relative to root
+    // Since we serve '/uploads', the URL should be `/uploads/${req.file.filename}`
+    const fileUrl = `/uploads/${req.file.filename}`;
+    
+    req.body.fileUrl = fileUrl;
+    
+    // Auto-detect type
+    const mime = req.file.mimetype;
+    if (mime.includes("pdf")) req.body.type = "pdf";
+    else if (mime.includes("video")) req.body.type = "video";
+    else if (mime.includes("image")) req.body.type = "image"; // map to other if needed
+    else req.body.type = "other";
 
-      const result = await uploadStream(req.file.buffer);
-
-      if (result && result.secure_url) {
-        req.body.fileUrl = result.secure_url;
-        // Attempt to auto-set type if not provided or just rely on manual selection
-        // For simplicity, let's keep manual selection or default 'pdf' unless obvious
-        if (result.format === "pdf") req.body.type = "pdf";
-        else if (["mp4", "mov", "avi"].includes(result.format))
-          req.body.type = "video";
-      }
-    } catch (error) {
-      console.error("Resource upload failed", error);
-      return next(new ErrorResponse("File upload failed", 500));
-    }
+  } else {
+    return next(new ErrorResponse("Please upload a file", 400));
   }
 
   const resource = await Resource.create(req.body);
+
+  // 2.3 Hardcoded Notification Triggers (Material Upload)
+  const students = await User.find({ role: 'student' });
+
+  students.forEach(async (s) => {
+    const notif = await Notification.create({
+      user: s._id,
+      title: 'New Material',
+      message: 'A faculty has posted a new material.'
+    });
+
+    if (req.io) {
+      req.io.to(s._id.toString()).emit('notification', notif);
+    }
+  });
 
   res.status(201).json({
     success: true,

@@ -21,7 +21,12 @@ const Sidebar = () => {
         { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
         { text: 'Academics', icon: <SchoolIcon />, path: '/academics' },
         { text: 'Careers', icon: <WorkIcon />, path: '/careers' },
-    ];
+    ].filter(item => {
+        if (user?.role === 'admin') {
+            return item.text !== 'Academics' && item.text !== 'Careers';
+        }
+        return true;
+    });
 
     return (
         <Drawer
@@ -48,7 +53,7 @@ const Sidebar = () => {
                         </ListItem>
                     ))}
 
-                    {user?.role !== 'faculty' && (
+                    {user?.role !== 'faculty' && user?.role !== 'admin' && (
                         <>
                             <ListItem button onClick={() => setOpenGrievance(!openGrievance)}>
                                 <ListItemIcon sx={{ color: 'secondary.main' }}><ReportIcon /></ListItemIcon>

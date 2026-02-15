@@ -105,6 +105,10 @@ exports.login = asyncHandler(async (req, res, next) => {
         return next(new ErrorResponse('Invalid credentials', 401));
     }
 
+    if (user.status === 'blocked') {
+        return next(new ErrorResponse('Your account has been blocked. Contact administrator.', 403));
+    }
+
     // Check if password matches
     const isMatch = await user.matchPassword(password);
 

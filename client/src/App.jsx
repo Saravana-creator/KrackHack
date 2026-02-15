@@ -16,12 +16,17 @@ import GrievanceForm from './pages/GrievanceForm';
 import GrievanceList from './pages/GrievanceList';
 
 import AcademicPortal from './pages/AcademicPortal';
+import AcademicCalendar from './pages/AcademicCalendar';
+import Resources from './pages/Resources';
 import Profile from './pages/Profile';
 import AdminDomains from './pages/AdminDomains';
 import Opportunities from './pages/Opportunities';
 import LostFound from './pages/LostFound';
 import FacultyOpportunities from './pages/faculty/FacultyOpportunities';
 import FacultyApplications from './pages/faculty/FacultyApplications';
+import AuthorityGrievances from './pages/authority/AuthorityGrievances';
+import AuthorityGrievanceDetail from './pages/authority/AuthorityGrievanceDetail';
+import AdminUsers from './pages/admin/AdminUsers';
 
 const theme = createTheme({
     palette: {
@@ -96,6 +101,8 @@ function App() {
                             <Route path="/grievance/new" element={<GrievanceForm />} />
                             <Route path="/grievances" element={<GrievanceList />} />
                             <Route path="/academics" element={<AcademicPortal />} />
+                            <Route path="/academics/calendar" element={<AcademicCalendar />} />
+                            <Route path="/academics/resources" element={<Resources />} />
                             <Route path="/profile" element={<Profile />} />
                             <Route path="/admin/domains" element={<AdminDomains />} />
                             <Route path="/careers" element={<Opportunities />} />
@@ -104,6 +111,15 @@ function App() {
                             {/* Faculty Routes */}
                             <Route path="/faculty/opportunities" element={<FacultyOpportunities />} />
                             <Route path="/faculty/applications/:id" element={<FacultyApplications />} />
+
+                            {/* Authority Routes */}
+                            <Route path="/authority/grievances" element={<AuthorityGrievances />} />
+                            <Route path="/authority/grievances/:id" element={<AuthorityGrievanceDetail />} />
+
+                            {/* Admin Routes */}
+                            <Route path="/admin/users" element={<AdminUsers />} />
+                            {/* We embedded domains, but if we kept the route: */}
+                            <Route path="/admin/domains" element={<AdminDomains />} />
                         </Route>
                     </Route>
                 </Routes>

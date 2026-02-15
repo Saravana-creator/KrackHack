@@ -42,7 +42,7 @@ import { motion } from "framer-motion";
 import api from "../../services/api";
 
 const FacultyDashboard = () => {
-  const { user } = useSelector((state) => state.auth);
+  const { user, isLoading } = useSelector((state) => state.auth);
   const [activeTab, setActiveTab] = useState(0);
 
   // Data States
@@ -62,6 +62,10 @@ const FacultyDashboard = () => {
   const [selectedOpp, setSelectedOpp] = useState(null); // For viewing applications
   const [applications, setApplications] = useState([]); // Apps for selected opp
   const [resourceFile, setResourceFile] = useState(null);
+  
+  // Analytics State
+  const [analyticsData, setAnalyticsData] = useState(null);
+  const [analyticsCourseId, setAnalyticsCourseId] = useState("");
 
   // Form States
   const [oppFormData, setOppFormData] = useState({
@@ -199,13 +203,20 @@ const FacultyDashboard = () => {
     try {
       const res = await api.get(`/courses/${course._id}/resources`);
       setCourseResources(res.data.data);
-      // Only switch tab or open dialog? Let's use a dialog or nested view
-      // For simplicty, let's open a Resource Management Dialog
-      // or we can select the course and show resources in the same tab.
-      // Let's use the UI state `selectedCourse` to render details in the current tab
     } catch (error) {
       console.error("Fetch Resources Error", error);
     }
+  };
+
+  const fetchCourseAnalytics = async (courseId) => {
+      if (!courseId) return;
+      try {
+          setAnalyticsData(null);
+          const res = await api.get(`/analytics/faculty?courseId=${courseId}`);
+          setAnalyticsData(res.data.data);
+      } catch (error) {
+          console.error("Fetch Analytics Error", error);
+      }
   };
 
   const handleUploadResource = async () => {
@@ -252,6 +263,14 @@ const FacultyDashboard = () => {
 
   // --- RENDER HELPERS ---
 
+  if (isLoading || !user) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "background.default", pb: 5 }}>
       {/* HEADER */}
@@ -282,6 +301,7 @@ const FacultyDashboard = () => {
           <Tab label="My Opportunities" />
           <Tab label="Academic Materials" />
           <Tab label="Academic Calendar" />
+          <Tab label="Attendance & Analytics" />
         </Tabs>
 
         {/* TAB 1: OPPORTUNITIES */}
@@ -300,7 +320,7 @@ const FacultyDashboard = () => {
               </Button>
             </Box>
             <Grid container spacing={3}>
-              {opportunities.map((opp) => (
+              {opportunities?.map((opp) => (
                 <Grid item xs={12} md={6} lg={4} key={opp._id}>
                   <Card
                     sx={{
@@ -414,7 +434,7 @@ const FacultyDashboard = () => {
                   </Box>
                 ) : (
                   <List sx={{ bgcolor: "background.paper", borderRadius: 1 }}>
-                    {myCourses.map((course) => (
+                    {myCourses?.map((course) => (
                       <ListItem
                         button
                         key={course._id}
@@ -526,7 +546,7 @@ const FacultyDashboard = () => {
               </Button>
             </Box>
             <Grid container spacing={2}>
-              {events.map((ev) => (
+              {events?.map((ev) => (
                 <Grid item xs={12} md={4} key={ev._id}>
                   <Paper
                     sx={{
@@ -568,7 +588,89 @@ const FacultyDashboard = () => {
                 </Grid>
               ))}
             </Grid>
+
           </motion.div>
+        )}
+
+        {/* TAB 4: ATTENDANCE & ANALYTICS */}
+        {activeTab === 3 && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <Typography variant="h5" color="text.primary" gutterBottom>
+                    Course Attendance & Participation
+                </Typography>
+                <Paper sx={{ p: 3, bgcolor: "background.paper", maxWidth: 800, mx: 'auto', mt: 4 }}>
+                    <TextField
+                        select
+                        fullWidth
+                        label="Select Course for Analysis"
+                        value={analyticsCourseId}
+                        onChange={(e) => {
+                            setAnalyticsCourseId(e.target.value);
+                            fetchCourseAnalytics(e.target.value);
+                        }}
+                        sx={{ mb: 4 }}
+                    >
+                        {myCourses.map((c) => (
+                            <MenuItem key={c._id} value={c._id}>
+                                {c.title} ({c.courseCode})
+                            </MenuItem>
+                        ))}
+                    </TextField>
+
+                    {analyticsData ? (
+                        <Grid container spacing={3}>
+                            <Grid item xs={12} md={6}>
+                                <Card variant="outlined">
+                                    <CardContent>
+                                        <Typography color="text.secondary" gutterBottom>
+                                            Inferred Attendance
+                                        </Typography>
+                                        <Typography variant="h3" color="primary">
+                                            {analyticsData?.percentPresent?.toFixed(1) || "0.0"}%
+                                        </Typography>
+                                        <Box sx={{ width: '100%', mr: 1, mt: 1 }}>
+                                            <Box sx={{ width: '100%', bgcolor: 'rgba(255,255,255,0.1)', height: 10, borderRadius: 5 }}>
+                                                 <Box sx={{ width: `${analyticsData?.percentPresent || 0}%`, bgcolor: '#3b82f6', height: '100%', borderRadius: 5 }} />
+                                            </Box>
+                                        </Box>
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+                            <Grid item xs={12} md={6}>
+                                <Card variant="outlined">
+                                    <CardContent>
+                                        <Typography color="text.secondary" gutterBottom>
+                                            Engagement
+                                        </Typography>
+                                        <Box display="flex" justifyContent="space-between" alignItems="center" mt={1}>
+                                            <Box>
+                                                <Typography variant="h5">{analyticsData.enrolledCount}</Typography>
+                                                <Typography variant="caption">Enrolled</Typography>
+                                            </Box>
+                                            <Box>
+                                                <Typography variant="h5" color="success.main">{analyticsData.activeCount}</Typography>
+                                                <Typography variant="caption">Active</Typography>
+                                            </Box>
+                                        </Box>
+                                        <Typography variant="caption" color="text.secondary" display="block" mt={1}>
+                                            *Active students have at least one attendance record.
+                                        </Typography>
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+                             <Grid item xs={12}>
+                                <Typography variant="caption" color="text.secondary">
+                                    Note: Attendance is inferred from system activity and explicit logging. Individual student records are private.
+                                </Typography>
+                            </Grid>
+                        </Grid>
+                    ) : (
+                        <Typography align="center" color="text.secondary">
+                            {analyticsCourseId ? "Loading analytics..." : "Please select a course to view analytics."}
+                        </Typography>
+                    )}
+                </Paper>
+            </motion.div>
         )}
       </Box>
 

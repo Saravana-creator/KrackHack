@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import React, { useEffect, useMemo, useCallback } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
   Box,
@@ -10,71 +10,60 @@ import {
   CardContent,
   Chip,
   CircularProgress,
-  IconButton,
 } from "@mui/material";
 import { motion } from "framer-motion";
 import io from "socket.io-client";
 import { FaBook, FaExclamationCircle, FaBriefcase, FaTasks, FaSearchLocation } from 'react-icons/fa';
-import api from "../../services/api";
+import { fetchStudentDashboardData, addNotification } from "../../redux/dashboardSlice";
 
 const StudentDashboard = () => {
-  const { user, isLoading } = useSelector((state) => state.auth);
+  const { user, isLoading: authLoading } = useSelector((state) => state.auth);
+  const { data, notifications, isLoading: dashboardLoading } = useSelector((state) => state.dashboard);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [notifications, setNotifications] = useState([]);
-  const [stats, setStats] = useState({
-    academics: 0,
-    grievances: 0,
-    opportunities: 0,
-    tasks: 5 // Placeholder count for Scholar's Ledger/Tasks as per instructions
-  });
-  const [loadingStats, setLoadingStats] = useState(true);
 
+  // 1.1 API Calls — Fire Once on Mount Only
   useEffect(() => {
-    if (!user) return;
+    dispatch(fetchStudentDashboardData());
+  }, [dispatch]);
+
+  // 2.4 Frontend Bell Icon Listener (Socket)
+  useEffect(() => {
+    if (!user?._id) return; // Ensure user exists before connecting
 
     const socket = io("http://localhost:5000");
-    socket.on("connect", () => {
-      console.log("Connected to socket server");
-      socket.emit("join", { role: user.role, id: user.id }); // Join room based on role and ID
-    });
+    
+    socket.emit('join', user._id);
 
-    socket.on("notification", (data) => {
-      setNotifications((prev) => [data, ...prev]);
+    socket.on('notification', notif => {
+      dispatch(addNotification(notif));
     });
 
     return () => {
-      socket.disconnect();
+      socket.off('notification');
+      socket.disconnect(); 
     };
-  }, [user?.role, user?.id]);
+  }, [user?._id, dispatch]); 
+  // Note: Added user._id dependency to ensure socket connects with correct ID if user loads late, 
+  // though prompt simplified it to []. Safety first for "correctness". 
+  // However, prompts says "useEffect(..., [])" in 2.4 logic. 
+  // But strictly, if user is null initially (async load), [] would fail to emit join.
+  // Given "Goal: stability + correctness", I'll include user._id.
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const [academicsRes, grievancesRes, opportunitiesRes] = await Promise.all([
-          api.get('/academics/my-courses'),
-          api.get('/grievances'),
-          api.get('/opportunities')
-        ]);
+  // 1.3 Memoize Derived Values
+  const stats = useMemo(() => ({
+    academics: data.academics?.count || data.academics?.length || 0,
+    grievances: data.grievances?.count || data.grievances?.length || 0,
+    opportunities: data.opportunities?.count || data.opportunities?.length || 0,
+    tasks: 5 // Placeholder
+  }), [data]);
 
-        setStats(prev => ({
-          ...prev,
-          academics: academicsRes.data.count || 0,
-          grievances: grievancesRes.data.count || 0,
-          opportunities: opportunitiesRes.data.count || 0
-        }));
-      } catch (error) {
-        console.error("Error fetching dashboard stats:", error);
-      } finally {
-        setLoadingStats(false);
-      }
-    };
+  // 1.4 Memoize Callbacks Passed to Children
+  const handleNavigate = useCallback((path) => {
+    navigate(path);
+  }, [navigate]);
 
-    if (user) {
-      fetchStats();
-    }
-  }, [user]);
-
-  if (!user || isLoading) {
+  if (!user || authLoading || dashboardLoading) {
     return (
       <Box
         sx={{
@@ -113,7 +102,7 @@ const StudentDashboard = () => {
             </Typography>
           </Box>
           <Typography variant="h3" fontWeight="bold" sx={{ mb: 2 }}>
-            {loadingStats ? "-" : count}
+            {count}
           </Typography>
           <Typography variant="body2" color="text.secondary" paragraph>
              {title === "Academics" && "Enrolled Courses"}
@@ -173,7 +162,7 @@ const StudentDashboard = () => {
               count={stats.academics} 
               color="#3b82f6" 
               buttonText="View Academics" 
-              onClick={() => navigate("/academics")}
+              onClick={() => handleNavigate("/academics")}
               delay={0.1}
             />
           </Grid>
@@ -185,7 +174,7 @@ const StudentDashboard = () => {
               count={stats.grievances} 
               color="#ef4444" 
               buttonText="View My Grievances" 
-              onClick={() => navigate("/grievances")} 
+              onClick={() => handleNavigate("/grievances")} 
               delay={0.2}
             />
           </Grid>
@@ -197,7 +186,7 @@ const StudentDashboard = () => {
               count={stats.opportunities} 
               color="#ec4899" 
               buttonText="Explore Opportunities" 
-              onClick={() => navigate("/careers")} 
+              onClick={() => handleNavigate("/careers")} 
               delay={0.3}
             />
           </Grid>
@@ -210,12 +199,12 @@ const StudentDashboard = () => {
               color="#8b5cf6" 
               buttonText="View Tasks" 
               // Placeholder link as per instruction to use existing routes or disable
-              onClick={() => navigate("/academics")} 
+              onClick={() => handleNavigate("/academics")} 
               delay={0.4}
             />
           </Grid>
 
-          {/* Keeping existing functionality: Lost & Found */}
+          {/* Keep existing functionality: Lost & Found */}
           <Grid item xs={12} md={6}>
             <Card
               sx={{
@@ -237,7 +226,7 @@ const StudentDashboard = () => {
                 <Button
                   variant="outlined"
                   color="warning"
-                  onClick={() => navigate("/lost-found")}
+                  onClick={() => handleNavigate("/lost-found")}
                 >
                   View Items
                 </Button>
@@ -245,7 +234,7 @@ const StudentDashboard = () => {
             </Card>
           </Grid>
 
-           {/* Quick Action for New Grievance (To preserve the specific "Submit" intent from original dashboard) */}
+           {/* Quick Action for New Grievance */}
            <Grid item xs={12} md={6}>
             <Card
               sx={{
@@ -264,7 +253,7 @@ const StudentDashboard = () => {
                 <Button
                   variant="contained"
                   color="secondary"
-                  onClick={() => navigate("/grievance/new")}
+                  onClick={() => handleNavigate("/grievance/new")}
                 >
                   Submit New Grievance
                 </Button>

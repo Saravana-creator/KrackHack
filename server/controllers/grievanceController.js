@@ -13,7 +13,13 @@ exports.getGrievances = asyncHandler(async (req, res, next) => {
   let grievances;
 
   if (req.user.role === ROLES.ADMIN || req.user.role === ROLES.AUTHORITY) {
-    const rawGrievances = await Grievance.find()
+    // Build query object for filtering
+    const query = {};
+    if (req.query.status) query.status = req.query.status;
+    if (req.query.priority) query.priority = req.query.priority;
+    if (req.query.category) query.category = req.query.category;
+
+    const rawGrievances = await Grievance.find(query)
       .populate("user", "username email department")
       .populate("assignedTo", "username email");
 
@@ -140,7 +146,8 @@ exports.createGrievance = asyncHandler(async (req, res, next) => {
 exports.getGrievance = asyncHandler(async (req, res, next) => {
   const grievance = await Grievance.findById(req.params.id)
     .populate("user", "username email department")
-    .populate("assignedTo", "username email");
+    .populate("assignedTo", "username email")
+    .populate("timeline.updatedBy", "username role");
 
   if (!grievance) {
     return next(
@@ -316,5 +323,122 @@ exports.updateGrievance = asyncHandler(async (req, res, next) => {
   res.status(200).json({
     success: true,
     data: grievance,
+  });
+});
+
+// @desc      Get grievance statistics
+// @route     GET /api/v1/grievances/stats
+// @access    Private (Authority, Admin)
+exports.getGrievanceStats = asyncHandler(async (req, res, next) => {
+  if (req.user.role !== ROLES.AUTHORITY && req.user.role !== ROLES.ADMIN) {
+    return next(new ErrorResponse("Not authorized to access stats", 403));
+  }
+
+  const statusStats = await Grievance.aggregate([
+    { $group: { _id: "$status", count: { $sum: 1 } } }
+  ]);
+
+  const priorityStats = await Grievance.aggregate([
+    { $match: { priority: "High" } }, // Or Critical if exists
+    { $count: "count" }
+  ]);
+
+  // Format the response
+  const stats = {
+    new: 0,
+    inProgress: 0,
+    highPriority: 0,
+    resolved: 0
+  };
+
+  statusStats.forEach(stat => {
+    if (stat._id === "Submitted") stats.new += stat.count;
+    if (stat._id === "Under Review" || stat._id === "In Progress") stats.inProgress += stat.count;
+    if (stat._id === "Resolved") stats.resolved += stat.count;
+  });
+
+  if (priorityStats.length > 0) {
+    stats.highPriority = priorityStats[0].count;
+  }
+  
+  // Also check for "Urgent" priority if applicable and add to highPriority
+    const urgentStats = await Grievance.aggregate([
+    { $match: { priority: "Urgent" } },
+    { $count: "count" }
+  ]);
+  if (urgentStats.length > 0) {
+      stats.highPriority += urgentStats[0].count;
+  }
+
+
+  res.status(200).json(stats);
+});
+
+// @desc      Update grievance status with mandatory remark
+// @route     PATCH /api/v1/grievances/:id/status
+// @access    Private (Authority, Admin)
+exports.updateGrievanceStatus = asyncHandler(async (req, res, next) => {
+  const { status, remark } = req.body;
+
+  if (!status || !remark) {
+    return next(new ErrorResponse("Status and remark are required", 400));
+  }
+
+  let grievance = await Grievance.findById(req.params.id);
+
+  if (!grievance) {
+    return next(new ErrorResponse(`No grievance found with id ${req.params.id}`, 404));
+  }
+
+  if (req.user.role !== ROLES.AUTHORITY && req.user.role !== ROLES.ADMIN) {
+    return next(new ErrorResponse("Not authorized to update status", 403));
+  }
+
+  // Check valid transitions (optional but good for robustness)
+  // implementing basic check
+  const validStatuses = ["Submitted", "Under Review", "In Progress", "Resolved", "Rejected"];
+  if (!validStatuses.includes(status)) {
+      return next(new ErrorResponse("Invalid status", 400));
+  }
+
+  if (grievance.status === "Resolved" && status !== "Resolved") {
+      // Allow reopening? User prompt says "resolved -> (locked)" but implies transitions.
+      // Assuming simplified flow for now as per prompt "Allowed Status Transitions".
+      // resolved -> (locked) means you can't go FROM resolved TO something else? Or usually it means final state.
+      // But let's stick to the prompt: "resolved -> (locked)" implies it's a terminal state.
+      // If it is already resolved, maybe we shouldn't allow changing it unless user is Admin? 
+      // For now, I'll allow it if they are Authority, assuming they might need to reopen.
+      // Actually, prompt says: "resolved -> (locked)". This likely means once resolved, it stays resolved.
+      // But what if it was resolved by mistake?
+      // I will add a check: if current status is Resolved, prevent update effectively locking it.
+      // UNLESS the user explicitly wants to transition TO resolved.
+      if (grievance.status === "Resolved") {
+         return next(new ErrorResponse("Grievance is resolved and locked", 400));
+      }
+  }
+
+  grievance.status = status;
+  
+  // Add to timeline
+  grievance.timeline.push({
+    status: status,
+    remark: remark,
+    comment: remark, // Keep comment for backward compatibility
+    updatedBy: req.user.id,
+    updatedAt: Date.now(),
+    date: Date.now() // Keep date for backward compatibility
+  });
+
+  await grievance.save();
+
+    // Notify student
+  req.io.to(grievance.user.toString()).emit("notification", {
+      message: `Your grievance status has been updated to ${status}`,
+      grievance
+  });
+
+  res.status(200).json({
+    success: true,
+    data: grievance
   });
 });

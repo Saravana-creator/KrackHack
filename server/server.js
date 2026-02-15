@@ -43,7 +43,13 @@ app.use(cors());
 
 // Helmet for security headers
 const helmet = require("helmet");
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: false,
+}));
+
+// Serve static directory for uploads
+const path = require("path");
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Health Check
 app.get("/api/health", (req, res) => {
@@ -81,29 +87,9 @@ app.use("/api/v1/admin", admin);
 app.use("/api/v1/opportunities", opportunities);
 app.use("/api/v1/lostfound", lostfound);
 
-// Socket.io connection
-io.on("connection", (socket) => {
-  console.log(`Socket connected: ${socket.id}`);
-
-  socket.on("disconnect", () => {
-    console.log("Socket disconnected");
-  });
-
-  // Join room based on role or user ID for targeted notifications
-  socket.on("join", (userData) => {
-    // userData can be just role string, or object { role, id }
-    if (typeof userData === "string") {
-      socket.join(userData);
-      console.log(`Socket ${socket.id} joined room ${userData}`);
-    } else if (typeof userData === "object") {
-      if (userData.role) socket.join(userData.role);
-      if (userData.id) socket.join(userData.id);
-      console.log(
-        `Socket ${socket.id} joined rooms for ${userData.role} and ${userData.id}`,
-      );
-    }
-  });
-});
+// Socket.io connection - Logic moved to sockets/notificationSocket.js
+const notificationSocket = require('./sockets/notificationSocket');
+notificationSocket(io);
 
 // Error Handler (must be last)
 app.use(errorHandler);

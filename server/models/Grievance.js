@@ -71,6 +71,11 @@ const GrievanceSchema = new mongoose.Schema({
         default: Date.now,
       },
       comment: String,
+      remark: String, // Add remark as requested
+      updatedAt: { // Add updatedAt as requested
+        type: Date,
+        default: Date.now
+      },
       updatedBy: {
         type: mongoose.Schema.ObjectId,
         ref: "User",

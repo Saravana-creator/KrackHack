@@ -1,4 +1,6 @@
 const Opportunity = require("../models/Opportunity");
+const User = require("../models/User");
+const Notification = require("../models/Notification");
 const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("express-async-handler");
 const ROLES = require("../constants/roles");
@@ -110,6 +112,21 @@ exports.createOpportunity = asyncHandler(async (req, res, next) => {
   }
 
   const opportunity = await Opportunity.create(req.body);
+
+  // 2.3 Hardcoded Notification Triggers
+  const students = await User.find({ role: 'student' });
+  
+  students.forEach(async (s) => {
+    const notif = await Notification.create({
+      user: s._id,
+      title: 'New Opportunity',
+      message: 'A faculty has posted a new opportunity.'
+    });
+
+    if (req.io) {
+      req.io.to(s._id.toString()).emit('notification', notif);
+    }
+  });
 
   res.status(201).json({
     success: true,

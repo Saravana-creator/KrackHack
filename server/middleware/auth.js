@@ -21,6 +21,10 @@ const protect = asyncHandler(async (req, res, next) => {
 
         req.user = await User.findById(decoded.id);
 
+        if (!req.user || req.user.status === 'blocked') {
+             return res.status(403).json({ success: false, message: 'Access denied: Account blocked' });
+        }
+
         next();
     } catch (err) {
         return res.status(401).json({ success: false, message: 'Not authorized to access this route' });

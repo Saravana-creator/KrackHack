@@ -44,8 +44,8 @@ const AdminDomains = () => {
     };
 
     return (
-        <Box sx={{ p: 4, minHeight: '100vh', bgcolor: 'background.default' }}>
-            <Typography variant="h4" gutterBottom sx={{ color: 'primary.main', fontWeight: 'bold' }}>
+        <Box sx={{ width: '100%' }}>
+            <Typography variant="h5" gutterBottom sx={{ color: 'primary.main', fontWeight: 'bold' }}>
                 Manage Allowed Email Domains
             </Typography>
             <Typography sx={{ color: 'text.secondary', mb: 4 }}>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -42,6 +43,7 @@ import CourseCard from "../components/CourseCard";
 
 const AcademicPortal = () => {
   const { user } = useSelector((state) => state.auth);
+  const navigate = useNavigate();
 
   // Main State
   const [courses, setCourses] = useState([]); // Catalog
@@ -305,14 +307,14 @@ const AcademicPortal = () => {
                     My Classes
                   </Button>
                   <Button
-                    onClick={() => setView("calendar")}
+                    onClick={() => navigate("/academics/calendar")}
                     sx={{
-                      color: view === "calendar" ? "#a855f7" : "white",
-                      borderBottom:
-                        view === "calendar"
-                          ? "2px solid #a855f7"
-                          : "2px solid transparent",
+                      color: "white",
+                      borderBottom: "2px solid transparent",
                       borderRadius: 0,
+                      "&:hover": {
+                        borderBottom: "2px solid #a855f7",
+                      }
                     }}
                   >
                     Calendar
@@ -702,27 +704,27 @@ const AcademicPortal = () => {
                     Classes
                   </Button>
                   <Button
-                    onClick={() => setView("calendar")}
+                    onClick={() => navigate("/academics/calendar")}
                     sx={{
-                      color: view === "calendar" ? "#3b82f6" : "white",
-                      borderBottom:
-                        view === "calendar"
-                          ? "2px solid #3b82f6"
-                          : "2px solid transparent",
+                      color: "white",
+                      borderBottom: "2px solid transparent",
                       borderRadius: 0,
+                      "&:hover": {
+                        borderBottom: "2px solid #3b82f6",
+                      }
                     }}
                   >
                     Calendar
                   </Button>
                   <Button
-                    onClick={() => setView("library")}
+                    onClick={() => navigate("/academics/resources")}
                     sx={{
-                      color: view === "library" ? "#3b82f6" : "white",
-                      borderBottom:
-                        view === "library"
-                          ? "2px solid #3b82f6"
-                          : "2px solid transparent",
+                      color: "white",
+                      borderBottom: "2px solid transparent",
                       borderRadius: 0,
+                      "&:hover": {
+                        borderBottom: "2px solid #3b82f6",
+                      }
                     }}
                   >
                     Library
